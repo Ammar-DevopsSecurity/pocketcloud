@@ -1,0 +1,35 @@
+
+
+services:
+  pocketcloud:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: pocketcloud
+
+    ports:
+      - "4566:4566"
+
+    environment:
+      - API_KEY=your-key
+      - NODE_ENV=production
+      - PORT=4566
+      - NODE_ENV=production
+      - PORT=4566
+      - ANTHROPIC_API_KEY=your_actual_key_here
+    volumes:
+      # Persist storage, keys, users, queues, crons between restarts
+      - ./data/storage:/app/storage
+      - ./data/keys.json:/app/keys.json
+      - ./data/users.json:/app/users.json
+      - ./data/queues.json:/app/queues.json
+      - ./data/crons.json:/app/crons.json
+      - ./data/triggers.json:/app/triggers.json
+
+      # Mount functions folder so you can add functions without rebuilding
+      - ./server/functions:/app/functions
+
+      # Docker socket so PocketCloud can spin up containers
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    restart: unless-stopped

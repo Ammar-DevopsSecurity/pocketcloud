@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Runtime data (contains real keys, passwords, user accounts)
+data/
+server/data/
+server/keys.json
+server/users.json
+server/queues.json
+server/crons.json
+server/triggers.json
+server/storage/
+
+# Logs
+*.log
+server/users.json
+server/keys.json
+server/keys_merged.json
+server/queues.json
+server/crons.json
+server/triggers.json
+server/storage/
+data/keys.json
+data/keys_merged.json
+data/users.json
+data/secrets.json
+data/billing.json
+data/metrics.json
+node_modules/
+node_modules/

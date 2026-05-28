@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PocketCloud — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: #0a0c10;
+    color: #e8eaf0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 400px;
+    padding: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .logo .icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #00d4aa, #7c6af7);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    margin: 0 auto 14px;
+    box-shadow: 0 0 30px rgba(0,212,170,0.3);
+  }
+
+  .logo h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -1px;
+  }
+
+  .logo h1 span { color: #00d4aa; }
+  .logo p { font-size: 11px; color: #6b7280; margin-top: 4px; }
+
+  .card {
+    background: #111318;
+    border: 1px solid #2a2d35;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+  }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: #1a1d24;
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 28px;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 8px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #6b7280;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .tab.active {
+    background: #2a2d35;
+    color: #00d4aa;
+  }
+
+  .form-group { margin-bottom: 18px; }
+
+  label {
+    display: block;
+    font-size: 10px;
+    color: #6b7280;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+
+  input {
+    width: 100%;
+    background: #1a1d24;
+    border: 1px solid #2a2d35;
+    border-radius: 8px;
+    color: #e8eaf0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 11px 14px;
+    outline: none;
+    transition: all 0.15s;
+  }
+
+  input:focus {
+    border-color: #00d4aa;
+    box-shadow: 0 0 0 3px rgba(0,212,170,0.1);
+  }
+
+  .btn {
+    width: 100%;
+    padding: 12px;
+    background: #00d4aa;
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 8px;
+  }
+
+  .btn:hover {
+    background: #00f0c0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(0,212,170,0.3);
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .error {
+    background: rgba(255,92,92,0.1);
+    border: 1px solid rgba(255,92,92,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: #ff5c5c;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .success {
+    background: rgba(0,212,170,0.1);
+    border: 1px solid rgba(0,212,170,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: #00d4aa;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .setup-note {
+    background: rgba(124,106,247,0.1);
+    border: 1px solid rgba(124,106,247,0.3);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 11px;
+    color: #9d8ff7;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 10px;
+    color: #3a3d45;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <div class="icon">☁️</div>
+    <h1>Pocket<span>Cloud</span></h1>
+    <p>Local AWS Simulator</p>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login')">Sign In</button>
+      <button class="tab" onclick="switchTab('setup')">First Setup</button>
+    </div>
+
+    <div id="error" class="error"></div>
+    <div id="success" class="success"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="tab-login">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="login-username" placeholder="your username" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter') login()">
+      </div>
+      <button class="btn" onclick="login()">Sign In →</button>
+    </div>
+
+    <!-- SETUP FORM -->
+    <div id="tab-setup" style="display:none">
+      <div class="setup-note">
+        👋 First time? Create your admin account. This only works once — when no users exist yet.
+      </div>
+      <div class="form-group">
+        <label>Admin Username</label>
+        <input type="text" id="setup-username" placeholder="admin">
+      </div>
+      <div class="form-group">
+        <label>Password (min 6 chars)</label>
+        <input type="password" id="setup-password" placeholder="••••••••"
+          onkeydown="if(event.key==='Enter') setup()">
+      </div>
+      <button class="btn" onclick="setup()">Create Admin Account →</button>
+    </div>
+  </div>
+
+  <div class="footer">PocketCloud v1.0 · localhost:4566</div>
+</div>
+
+<script>
+  const API = window.location.origin;
+
+  function switchTab(tab) {
+    document.getElementById('tab-login').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('tab-setup').style.display = tab === 'setup' ? 'block' : 'none';
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'setup'));
+    });
+    hideMessages();
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error');
+    el.textContent = msg;
+    el.style.display = 'block';
+    document.getElementById('success').style.display = 'none';
+  }
+
+  function showSuccess(msg) {
+    const el = document.getElementById('success');
+    el.textContent = msg;
+    el.style.display = 'block';
+    document.getElementById('error').style.display = 'none';
+  }
+
+  function hideMessages() {
+    document.getElementById('error').style.display = 'none';
+    document.getElementById('success').style.display = 'none';
+  }
+
+  async function login() {
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!username || !password) return showError('Please fill in all fields');
+
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) return showError(data.error);
+
+      // Save token and redirect to dashboard
+   // Generate a real API key for dashboard use
+const keyRes = await fetch(`${API}/keys`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: `${username}-${Date.now()}` })
+});
+const keyData = await keyRes.json();
+localStorage.setItem('pc_token', keyData.key.key);
+localStorage.setItem('pc_user', JSON.stringify(data.user));
+showSuccess(`Welcome back, ${username}! Redirecting...`);
+setTimeout(() => window.location.href = '/', 1000);
+    } catch {
+      showError('Cannot connect to server');
+    }
+  }
+
+  async function setup() {
+    const username = document.getElementById('setup-username').value.trim();
+    const password = document.getElementById('setup-password').value;
+    if (!username || !password) return showError('Please fill in all fields');
+
+    try {
+      const res = await fetch(`${API}/auth/setup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) return showError(data.error);
+
+      localStorage.setItem('pc_token', data.token);
+      localStorage.setItem('pc_user', JSON.stringify(data.user));
+      showSuccess('Admin account created! Redirecting...');
+      setTimeout(() => window.location.href = '/', 1000);
+    } catch {
+      showError('Cannot connect to server');
+    }
+  }
+
+  // If already logged in go straight to dashboard
+  if (localStorage.getItem('pc_token')) {
+    window.location.href = '/';
+  }
+</script>
+</body>
+</html>

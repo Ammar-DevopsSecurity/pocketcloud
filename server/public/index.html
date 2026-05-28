@@ -1,0 +1,4045 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PocketCloud Console</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --surface: #111318;
+      --surface2: #1a1d24;
+      --border: #2a2d35;
+      --accent: #00d4aa;
+      --accent2: #7c6af7;
+      --accent3: #f7a26a;
+      --danger: #ff5c5c;
+      --text: #e8eaf0;
+      --text-dim: #6b7280;
+      --text-mid: #9ca3af;
+      --success: #00d4aa;
+      --glow: 0 0 20px rgba(0, 212, 170, 0.15);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 212, 170, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 170, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 12, 16, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-logo .cloud-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      box-shadow: var(--glow);
+    }
+
+    .nav-logo span {
+      color: var(--accent);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.offline {
+      background: var(--danger);
+      box-shadow: 0 0 8px var(--danger);
+      animation: none;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
+    }
+
+    .logout-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      transition: all 0.15s;
+    }
+
+    .logout-btn:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: calc(100vh - 60px);
+      position: relative;
+      z-index: 1;
+    }
+
+    aside {
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      background: rgba(17, 19, 24, 0.5);
+    }
+
+    .sidebar-section {
+      padding: 0 16px;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      padding: 0 12px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-mid);
+      transition: all 0.15s;
+      border: 1px solid transparent;
+    }
+
+    .sidebar-item:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .sidebar-item.active {
+      background: rgba(0, 212, 170, 0.08);
+      color: var(--accent);
+      border-color: rgba(0, 212, 170, 0.2);
+    }
+
+    .sidebar-item .icon {
+      font-size: 14px;
+      width: 18px;
+      text-align: center;
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 16px 16px;
+    }
+
+    main {
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -1px;
+    }
+
+    .page-title span {
+      color: var(--accent);
+    }
+
+    .page-subtitle {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+    }
+
+    .stat-card:nth-child(1)::before {
+      background: var(--accent);
+    }
+
+    .stat-card:nth-child(2)::before {
+      background: var(--accent2);
+    }
+
+    .stat-card:nth-child(3)::before {
+      background: var(--accent3);
+    }
+
+    .stat-card:nth-child(4)::before {
+      background: var(--danger);
+    }
+
+    .stat-card:hover {
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .stat-card:nth-child(1) .stat-value {
+      color: var(--accent);
+    }
+
+    .stat-card:nth-child(2) .stat-value {
+      color: var(--accent2);
+    }
+
+    .stat-card:nth-child(3) .stat-value {
+      color: var(--accent3);
+    }
+
+    .stat-card:nth-child(4) .stat-value {
+      color: var(--danger);
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(26, 29, 36, 0.5);
+    }
+
+    .panel-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-mid);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-body {
+      padding: 20px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 7px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+    }
+
+    .btn-primary:hover {
+      background: #00f0c0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(0, 212, 170, 0.3);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-mid);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(255, 92, 92, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: rgba(255, 92, 92, 0.1);
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 10px;
+    }
+
+    .bucket-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+      margin-bottom: 6px;
+    }
+
+    .bucket-item:hover {
+      background: var(--surface2);
+      border-color: var(--border);
+    }
+
+    .bucket-item.selected {
+      background: rgba(0, 212, 170, 0.06);
+      border-color: rgba(0, 212, 170, 0.25);
+    }
+
+    .bucket-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .bucket-icon {
+      width: 32px;
+      height: 32px;
+      background: rgba(124, 106, 247, 0.15);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .bucket-meta {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .bucket-actions {
+      display: flex;
+      gap: 6px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .bucket-item:hover .bucket-actions {
+      opacity: 1;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      margin-bottom: 4px;
+      transition: all 0.15s;
+    }
+
+    .file-item:hover {
+      background: var(--surface2);
+      border-color: var(--border);
+    }
+
+    .file-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+    }
+
+    .file-icon {
+      width: 28px;
+      height: 28px;
+      background: rgba(247, 162, 106, 0.1);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .file-actions {
+      display: flex;
+      gap: 6px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .file-item:hover .file-actions {
+      opacity: 1;
+    }
+
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(0, 212, 170, 0.04);
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .upload-text {
+      font-size: 12px;
+      color: var(--text-mid);
+    }
+
+    .upload-text span {
+      color: var(--accent);
+    }
+
+    select,
+    input[type="text"] {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 8px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+
+    select:focus,
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.1);
+    }
+
+    .log-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(42, 45, 53, 0.5);
+      font-size: 11px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .log-item:last-child {
+      border-bottom: none;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .log-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .log-dot.put {
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+    }
+
+    .log-dot.trigger {
+      background: var(--accent2);
+      box-shadow: 0 0 6px var(--accent2);
+    }
+
+    .log-dot.delete {
+      background: var(--danger);
+      box-shadow: 0 0 6px var(--danger);
+    }
+
+    .log-message {
+      color: var(--text-mid);
+      flex: 1;
+      line-height: 1.5;
+    }
+
+    .log-time {
+      color: var(--text-dim);
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      width: 400px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+      animation: modalIn 0.2s ease;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .modal h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .modal p {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 20px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-dim);
+    }
+
+    .empty-state .empty-icon {
+      font-size: 32px;
+      margin-bottom: 10px;
+      opacity: 0.5;
+    }
+
+    .empty-state p {
+      font-size: 11px;
+    }
+
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      animation: toastIn 0.3s ease;
+      min-width: 280px;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .toast.success {
+      border-left: 3px solid var(--accent);
+    }
+
+    .toast.error {
+      border-left: 3px solid var(--danger);
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .badge-green {
+      background: rgba(0, 212, 170, 0.1);
+      color: var(--accent);
+      border: 1px solid rgba(0, 212, 170, 0.2);
+    }
+
+    .badge-purple {
+      background: rgba(124, 106, 247, 0.1);
+      color: var(--accent2);
+      border: 1px solid rgba(124, 106, 247, 0.2);
+    }
+
+    .refresh-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .refresh-btn:hover {
+      color: var(--accent);
+      transform: rotate(90deg);
+    }
+
+    .spinning {
+      animation: spin 0.6s linear;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .user-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      background: var(--surface2);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .perm-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 9px;
+      background: rgba(0, 212, 170, 0.1);
+      color: var(--accent);
+      border: 1px solid rgba(0, 212, 170, 0.2);
+      margin: 2px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-logo">
+      <div class="cloud-icon">☁️</div>
+      Pocket<span>Cloud</span>
+    </div>
+    <div class="nav-right">
+      <div class="nav-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Connecting...</span>
+        &nbsp;·&nbsp; localhost:4566
+      </div>
+      <button class="logout-btn" onclick="logout()">⏻ Logout</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <aside>
+      <div class="sidebar-label">Services</div>
+      <div class="sidebar-section">
+
+        <div class="sidebar-item active" onclick="showSection('storage')">
+          <span class="icon">📦</span> S3 Storage
+          <span class="badge badge-green" style="margin-left:auto">Live</span>
+        </div>
+
+        <div class="sidebar-item" onclick="showSection('queues')">
+          <span class="icon">📨</span> SQS Queues
+          <span class="badge badge-purple" style="margin-left:auto">New</span>
+        </div>
+
+        <div class="sidebar-item" onclick="showSection('functions')">
+          <span class="icon">⚡</span> Functions
+          <span class="badge badge-purple" style="margin-left:auto">λ</span>
+        </div>
+
+        <div class="sidebar-item" onclick="showSection('crons')">
+          <span class="icon">⏱️</span> Scheduler
+        </div>
+
+        <div class="sidebar-item" onclick="showSection('gateway')">
+          <span class="icon">🌐</span> API Gateway
+        </div>
+
+        <div class="sidebar-item" onclick="showSection('sns')">
+          <span class="icon">📣</span> SNS Topics
+        </div>
+
+        <div class="sidebar-item" onclick="showSection('secrets')">
+          <span class="icon">🔑</span> Secrets Manager
+        </div>
+
+        <div class="sidebar-item" onclick="showSection('cloudwatch')">
+          <span class="icon">📊</span> CloudWatch
+        </div>
+
+        <div class="sidebar-item" onclick="showSection('rds')">
+          <span class="icon">🗄️</span> RDS Databases
+        </div>
+
+        <div class="sidebar-item" onclick="showSection('logs')">
+          <span class="icon">📝</span> Activity Log
+        </div>
+
+        <div class="sidebar-item" onclick="showSection('vpc')">
+          <span class="icon">🔗</span> VPC
+        </div>
+
+        <div class="sidebar-item" onclick="showSection('ec2')">
+          <span class="icon">🖥️</span> EC2
+        </div>
+        <div class="sidebar-item" onclick="showSection('billing')">
+          <span class="icon">💰</span> Billing
+        </div>
+        <div class="sidebar-item" onclick="showSection('ai')">
+          <span class="icon">🤖</span> AI Analyzer
+        </div>
+
+
+
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-label">Account</div>
+      <div class="sidebar-section">
+
+        <div class="sidebar-item" onclick="showSection('iam')">
+          <span class="icon">👤</span> IAM Users
+        </div>
+
+        <div class="sidebar-item" onclick="showSection('about')">
+          <span class="icon">ℹ️</span> About
+        </div>
+
+      </div>
+    </aside>
+
+    <main>
+
+      <!-- STORAGE -->
+      <div id="section-storage">
+        <div class="page-header">
+          <div>
+            <div class="page-title">S3 <span>Storage</span></div>
+            <div class="page-subtitle">Manage buckets and objects</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('createBucket')">+ New Bucket</button>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Buckets</div>
+            <div class="stat-value" id="statBuckets">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Objects</div>
+            <div class="stat-value" id="statObjects">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Triggers</div>
+            <div class="stat-value" id="statTriggers">1</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Status</div>
+            <div class="stat-value" style="font-size:16px;padding-top:6px" id="statStatus">—</div>
+          </div>
+        </div>
+
+        <div class="content-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">📦 Buckets</div>
+              <button class="refresh-btn" onclick="loadBuckets(this)">↻</button>
+            </div>
+            <div class="panel-body" id="bucketList">
+              <div class="empty-state">
+                <div class="empty-icon">📦</div>
+                <p>Loading buckets...</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">🗂️ Objects <span id="selectedBucketLabel"
+                  style="color:var(--accent);margin-left:6px"></span></div>
+              <button class="refresh-btn" onclick="if(selectedBucket) loadObjects(selectedBucket)">↻</button>
+            </div>
+            <div class="panel-body" id="objectList">
+              <div class="empty-state">
+                <div class="empty-icon">👈</div>
+                <p>Select a bucket to view files</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel full-width">
+            <div class="panel-header">
+              <div class="panel-title">⬆️ Upload Object</div>
+              <span style="font-size:10px;color:var(--text-dim)" id="uploadBucketLabel">Select a bucket first</span>
+            </div>
+            <div class="panel-body">
+              <div class="upload-zone" id="uploadZone">
+                <input type="file" id="fileInput" onchange="handleFileSelect(this)" multiple>
+                <div class="upload-icon">☁️</div>
+                <div class="upload-text">Drop files here or <span>browse</span></div>
+                <div style="font-size:10px;color:var(--text-dim);margin-top:6px">Max 100MB per file</div>
+              </div>
+              <div id="uploadProgress" style="margin-top:12px;display:none">
+                <div style="font-size:11px;color:var(--text-mid);margin-bottom:6px" id="uploadStatus">Uploading...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUEUES -->
+      <div id="section-queues" style="display:none">
+        <div class="page-header">
+          <div>
+            <div class="page-title">SQS <span>Queues</span></div>
+            <div class="page-subtitle">Message queue management</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('createQueue')">+ New Queue</button>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">📨 Queues</div>
+            <button class="refresh-btn" onclick="loadQueues(this)">↻</button>
+          </div>
+          <div class="panel-body" id="queueList">
+            <div class="empty-state">
+              <div class="empty-icon">📨</div>
+              <p>Loading queues...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FUNCTIONS -->
+      <div id="section-functions" style="display:none">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Lambda <span>Functions</span></div>
+            <div class="page-subtitle">Event-driven Docker execution</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">⚡ Deployed Functions</div>
+          </div>
+          <div class="panel-body">
+            <div class="bucket-item selected" style="cursor:default">
+              <div class="bucket-name">
+                <div class="bucket-icon" style="background:rgba(0,212,170,0.1)">λ</div>
+                <div>
+                  <div>logger-fn</div>
+                  <div class="bucket-meta">Trigger: PUT → uploads bucket · Docker isolated</div>
+                </div>
+              </div>
+              <span class="badge badge-green">Active</span>
+            </div>
+            <div
+              style="margin-top:20px;padding:16px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+              <div
+                style="font-size:10px;color:var(--text-dim);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase">
+                How it works</div>
+              <div style="font-size:11px;color:var(--text-mid);line-height:1.8">
+                1. Upload a file to the <span style="color:var(--accent)">uploads</span> bucket<br>
+                2. Trigger engine detects the PUT event<br>
+                3. Docker spins up an isolated container<br>
+                4. <span style="color:var(--accent)">logger-fn/handler.js</span> runs with file metadata<br>
+                5. Container auto-destroys after execution
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCHEDULER -->
+      <div id="section-crons" style="display:none">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Cron <span>Scheduler</span></div>
+            <div class="page-subtitle">Scheduled function execution</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('createCron')">+ New Schedule</button>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">⏱️ Scheduled Jobs</div>
+            <button class="refresh-btn" onclick="loadCrons(this)">↻</button>
+          </div>
+          <div class="panel-body" id="cronList">
+            <div class="empty-state">
+              <div class="empty-icon">⏱️</div>
+              <p>Loading schedules...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- GATEWAY -->
+      <div id="section-gateway" style="display:none">
+        <div class="page-header">
+          <div>
+            <div class="page-title">API <span>Gateway</span></div>
+            <div class="page-subtitle">REST APIs, resources, methods and deployments</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost" onclick="showGatewayTab('proxy')">Proxy Routes</button>
+            <button class="btn btn-primary" onclick="showGatewayTab('restapi')">REST APIs</button>
+          </div>
+        </div>
+
+        <!-- PROXY TAB -->
+        <div id="gw-tab-proxy">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">🌐 Proxy Routes</div>
+              <div style="display:flex;gap:8px">
+                <button class="refresh-btn" onclick="loadGatewayRoutes(this)">↻</button>
+                <button class="btn btn-primary btn-sm" onclick="openModal('createRoute')">+ New Route</button>
+              </div>
+            </div>
+            <div class="panel-body" id="gatewayList">
+              <div class="empty-state">
+                <div class="empty-icon">🌐</div>
+                <p>No routes yet</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REST API TAB -->
+        <div id="gw-tab-restapi" style="display:none">
+          <div class="content-grid">
+
+            <!-- LEFT: API list -->
+            <div class="panel">
+              <div class="panel-header">
+                <div class="panel-title">🔌 REST APIs</div>
+                <div style="display:flex;gap:8px">
+                  <button class="refresh-btn" onclick="loadRestApis(this)">↻</button>
+                  <button class="btn btn-primary btn-sm" onclick="openModal('createRestApi')">+ New API</button>
+                </div>
+              </div>
+              <div class="panel-body" id="restApiList">
+                <div class="empty-state">
+                  <div class="empty-icon">🔌</div>
+                  <p>No REST APIs yet</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT: API detail -->
+            <div class="panel">
+              <div class="panel-header">
+                <div class="panel-title">📋 API Detail</div>
+                <span style="font-size:10px;color:var(--text-dim)" id="selectedApiLabel">Select an API</span>
+              </div>
+              <div class="panel-body" id="restApiDetail">
+                <div class="empty-state">
+                  <div class="empty-icon">👈</div>
+                  <p>Select an API to manage it</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Resources + Methods -->
+          <div class="panel full-width" id="resourcePanel" style="display:none;margin-top:0">
+            <div class="panel-header">
+              <div class="panel-title">🗂️ Resources & Methods</div>
+              <button class="btn btn-primary btn-sm" onclick="openModal('createResource')">+ Add Resource</button>
+            </div>
+            <div class="panel-body" id="resourceList"></div>
+          </div>
+
+          <!-- Test panel -->
+          <div class="panel full-width" id="testPanel" style="display:none;margin-top:24px">
+            <div class="panel-header">
+              <div class="panel-title">⚡ Test Endpoint</div>
+            </div>
+            <div class="panel-body">
+              <div style="display:grid;grid-template-columns:120px 1fr auto;gap:8px;align-items:end">
+                <div>
+                  <div class="form-label">Method</div>
+                  <select id="testMethod">
+                    <option>GET</option>
+                    <option>POST</option>
+                    <option>PUT</option>
+                    <option>DELETE</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="form-label">Path (e.g. /hello)</div>
+                  <input type="text" id="testPath" placeholder="/hello">
+                </div>
+                <button class="btn btn-primary" onclick="testEndpoint()">Send ▶</button>
+              </div>
+              <div style="margin-top:12px">
+                <div class="form-label">Request Body (JSON)</div>
+                <textarea id="testBody"
+                  style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;padding:10px;resize:vertical;min-height:60px;outline:none"
+                  placeholder='{"key":"value"}'></textarea>
+              </div>
+              <div id="testResult" style="margin-top:12px;display:none">
+                <div class="form-label">Response</div>
+                <pre id="testResultBody"
+                  style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:12px;font-size:11px;overflow-x:auto;white-space:pre-wrap;color:var(--accent)"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- SNS -->
+      <div id="section-sns" style="display:none">
+        <div class="page-header">
+          <div>
+            <div class="page-title">SNS <span>Topics</span></div>
+            <div class="page-subtitle">Pub/Sub messaging</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('createTopic')">+ New Topic</button>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">📨 Topics</div><button class="refresh-btn" onclick="loadTopics(this)">↻</button>
+          </div>
+          <div class="panel-body" id="topicList">
+            <div class="empty-state">
+              <div class="empty-icon">📨</div>
+              <p>No topics yet</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECRETS -->
+      <div id="section-secrets" style="display:none">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Secrets <span>Manager</span></div>
+            <div class="page-subtitle">Encrypted secret storage</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('createSecret')">+ New Secret</button>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🔑 Secrets</div><button class="refresh-btn" onclick="loadSecrets(this)">↻</button>
+          </div>
+          <div class="panel-body" id="secretList">
+            <div class="empty-state">
+              <div class="empty-icon">🔑</div>
+              <p>No secrets yet</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLOUDWATCH -->
+      <div id="section-cloudwatch" style="display:none">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Cloud<span>Watch</span></div>
+            <div class="page-subtitle">Metrics and monitoring</div>
+          </div>
+          <button class="btn btn-ghost" onclick="loadMetrics()">↻ Refresh</button>
+        </div>
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Total Requests</div>
+            <div class="stat-value" id="cwTotalRequests">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Errors</div>
+            <div class="stat-value" id="cwTotalErrors">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Response</div>
+            <div class="stat-value" id="cwAvgResponse">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Error Rate</div>
+            <div class="stat-value" id="cwErrorRate">—</div>
+          </div>
+        </div>
+        <div class="content-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">📊 Requests by Service</div>
+            </div>
+            <div class="panel-body" id="cwByService"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">⚡ Requests Per Minute</div>
+            </div>
+            <div class="panel-body">
+              <div
+                style="font-family:'Syne',sans-serif;font-size:48px;font-weight:700;color:var(--accent);text-align:center;padding:20px 0"
+                id="cwRPM">—</div>
+              <div style="text-align:center;font-size:11px;color:var(--text-dim)">requests in last 60 seconds</div>
+            </div>
+          </div>
+          <div class="panel full-width">
+            <div class="panel-header">
+              <div class="panel-title">🕐 Recent Requests Timeline</div>
+            </div>
+            <div class="panel-body" id="cwTimeline"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RDS -->
+      <div id="section-rds" style="display:none">
+        <div class="page-header">
+          <div>
+            <div class="page-title">RDS <span>Databases</span></div>
+            <div class="page-subtitle">PostgreSQL instances in Docker</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('createRds')">+ New Instance</button>
+        </div>
+        <div class="content-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">🗄️ Instances</div><button class="refresh-btn"
+                onclick="loadRdsInstances(this)">↻</button>
+            </div>
+            <div class="panel-body" id="rdsList">
+              <div class="empty-state">
+                <div class="empty-icon">🗄️</div>
+                <p>No instances yet</p>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">💻 Query Editor</div><span style="font-size:10px;color:var(--text-dim)"
+                id="selectedRdsLabel">Select an instance</span>
+            </div>
+            <div class="panel-body">
+              <textarea id="sqlQuery" style="width:100%;min-height:100px;resize:vertical"
+                placeholder="SELECT * FROM users;"></textarea>
+              <button class="btn btn-primary" style="margin-top:10px;width:100%" onclick="executeQuery()">▶ Run
+                Query</button>
+              <div id="queryResult" style="margin-top:12px;display:none">
+                <div class="form-label">Result</div>
+                <pre id="queryResultBody"
+                  style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:12px;font-size:11px;overflow-x:auto;white-space:pre-wrap;color:var(--accent);max-height:200px;overflow-y:auto"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- VPC -->
+      <div id="section-vpc" style="display:none">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Virtual Private <span>Cloud</span></div>
+            <div class="page-subtitle">Isolated network environments</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('createVpc')">+ New VPC</button>
+        </div>
+        <div class="content-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">🌐 VPCs</div><button class="refresh-btn" onclick="loadVpcs(this)">↻</button>
+            </div>
+            <div class="panel-body" id="vpcList">
+              <div class="empty-state">
+                <div class="empty-icon">🌐</div>
+                <p>No VPCs yet</p>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">🔲 Subnets <span id="selectedVpcLabel"
+                  style="color:var(--accent);margin-left:6px"></span></div><button class="btn btn-ghost btn-sm"
+                onclick="openModal('createSubnet')">+ Subnet</button>
+            </div>
+            <div class="panel-body" id="subnetList">
+              <div class="empty-state">
+                <div class="empty-icon">🔲</div>
+                <p>Select a VPC</p>
+              </div>
+            </div>
+          </div>
+          <div class="panel full-width">
+            <div class="panel-header">
+              <div class="panel-title">🔒 Security Groups</div>
+              <span class="badge badge-green">Enforced</span>
+              
+            </div>
+            <div class="panel-body" id="sgList">
+              <div class="empty-state">
+                <div class="empty-icon">🔒</div>
+                <p>Select a VPC</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EC2 -->
+      <div id="section-ec2" style="display:none">
+        <div class="page-header">
+          <div>
+            <div class="page-title">EC2 <span>Instances</span></div>
+            <div class="page-subtitle">Virtual machines running in Docker</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('launchEc2')">+ Launch Instance</button>
+        </div>
+        <div class="content-grid">
+          <div class="panel full-width">
+            <div class="panel-header">
+              <div class="panel-title">🖥️ Instances</div><button class="refresh-btn"
+                onclick="loadEc2Instances(this)">↻</button>
+            </div>
+            <div class="panel-body" id="ec2List">
+              <div class="empty-state">
+                <div class="empty-icon">🖥️</div>
+                <p>No instances yet</p>
+              </div>
+            </div>
+          </div>
+          <div class="panel full-width" id="ec2TerminalPanel" style="display:none">
+            <div class="panel-header">
+              <div class="panel-title">💻 Instance Terminal <span id="terminalInstanceLabel"
+                  style="color:var(--accent);margin-left:6px"></span></div>
+            </div>
+            <div class="panel-body">
+              <div style="display:grid;grid-template-columns:1fr auto;gap:8px">
+                <input type="text" id="terminalCommand" placeholder="ls -la"
+                  onkeydown="if(event.key==='Enter')runCommand()">
+                <button class="btn btn-primary" onclick="runCommand()">▶ Run</button>
+              </div>
+              <div class="panel-header" style="background:#161b22;border-bottom:1px solid #30363d">
+  <div class="panel-title" style="color:#58a6ff">
+    <span style="color:#ff5f56">●</span>
+    <span style="color:#ffbd2e;margin-left:6px">●</span>
+    <span style="color:#27c93f;margin-left:6px">●</span>
+    <span style="margin-left:16px">💻 Terminal</span>
+    <span id="terminalInstanceLabel" style="color:#58a6ff;margin-left:8px"></span>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-ghost btn-sm" onclick="clearTerminal()">Clear</button>
+    <button class="btn btn-ghost btn-sm" onclick="loadEc2Instances()">↻</button>
+  </div>
+</div>
+               <pre id="terminalOutput" style="
+  background: #0d1117;
+  color: #00ff41;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 12px;
+  min-height: 300px;
+  height: 400px;
+  margin-top: 12px;
+  overflow-y: auto;
+  max-height: 400px;
+  white-space: pre-wrap;
+  font-family: 'JetBrains Mono', monospace;
+  border: 1px solid #30363d;
+  line-height: 1.6;
+">$ _</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- BILLING -->
+      <div id="section-billing" style="display:none">
+        <div class="page-header">
+          <div>
+            <div class="page-title">💰 <span>Billing</span></div>
+            <div class="page-subtitle">Usage costs and service breakdown</div>
+          </div>
+          <button class="btn btn-danger" onclick="resetBilling()">Reset to $0</button>
+        </div>
+
+        <!-- Cost overview -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Total Cost</div>
+            <div class="stat-value" id="billTotal">$0.00</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">This Month</div>
+            <div class="stat-value" id="billMonthly">$0.00</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Today</div>
+            <div class="stat-value" id="billToday">$0.00</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Services Used</div>
+            <div class="stat-value" id="billServices">0</div>
+          </div>
+        </div>
+
+        <div class="content-grid">
+
+          <!-- Cost by service -->
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">📊 Cost by Service</div>
+            </div>
+            <div class="panel-body" id="billByService">
+              <div class="empty-state">
+                <div class="empty-icon">💰</div>
+                <p>No costs yet — start using services!</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent transactions -->
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">🧾 Recent Charges</div>
+            </div>
+            <div class="panel-body" id="billTransactions">
+              <div class="empty-state">
+                <div class="empty-icon">🧾</div>
+                <p>No transactions yet</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Price list -->
+          <div class="panel full-width">
+            <div class="panel-header">
+              <div class="panel-title">📋 Price List</div><span style="font-size:10px;color:var(--text-dim)">Simulated
+                AWS pricing</span>
+            </div>
+            <div class="panel-body" id="billPricing"></div>
+          </div>
+
+        </div>
+      </div>
+      <!-- AI -->
+      <div id="section-ai" style="display:none">
+        <div class="page-header">
+          <div>
+            <div class="page-title">AI <span>Analyzer</span></div>
+            <div class="page-subtitle">Powered by Ollama + Llama3.2 — runs locally</div>
+          </div>
+          <button class="btn btn-ghost" onclick="checkOllamaStatus()">🔍 Check Status</button>
+        </div>
+
+        <!-- Status card -->
+        <div class="panel" style="margin-bottom:24px">
+          <div class="panel-body" style="display:flex;align-items:center;gap:16px">
+            <div id="aiStatusDot" style="width:12px;height:12px;border-radius:50%;background:var(--text-dim)"></div>
+            <div>
+              <div style="font-size:13px" id="aiStatusText">Checking Ollama...</div>
+              <div style="font-size:11px;color:var(--text-dim)" id="aiStatusSub">Make sure Ollama is running</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-grid">
+
+          <!-- Manual analyze -->
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">🔍 Analyze Text</div>
+            </div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label class="form-label">Text to Analyze</label>
+                <textarea id="aiInputText" style="min-height:120px"
+                  placeholder="Paste any text here to analyze with AI..."></textarea>
+              </div>
+              <button class="btn btn-primary" style="width:100%" onclick="analyzeText()">🤖 Analyze with AI</button>
+              <div id="aiTextResult" style="margin-top:16px;display:none">
+                <div class="form-label">Analysis Result</div>
+                <div id="aiTextResultBody"
+                  style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:14px;font-size:11px;line-height:1.8">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Auto trigger info -->
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">⚡ Auto Trigger</div>
+            </div>
+            <div class="panel-body">
+              <div
+                style="background:var(--surface2);border-radius:8px;padding:16px;border:1px solid var(--border);margin-bottom:16px">
+                <div
+                  style="font-size:10px;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">
+                  How it works</div>
+                <div style="font-size:11px;color:var(--text-mid);line-height:1.8">
+                  1. Upload any <span style="color:var(--accent)">.txt</span> or <span
+                    style="color:var(--accent)">.json</span> file<br>
+                  2. Drop it in the <span style="color:var(--accent)">ai-uploads</span> bucket<br>
+                  3. Trigger fires automatically<br>
+                  4. Llama3.2 analyzes the content<br>
+                  5. Results appear in terminal
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Quick Upload to ai-uploads</label>
+                <div class="upload-zone" style="padding:20px;position:relative">
+                  <input type="file" onchange="uploadToAiBucket(this)"
+                    style="position:absolute;inset:0;opacity:0;cursor:pointer">
+                  <div style="text-align:center;font-size:12px;color:var(--text-mid)">📄 Drop file here → AI analyzes it
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Results log -->
+          <div class="panel full-width">
+            <div class="panel-header">
+              <div class="panel-title">📊 Analysis History</div>
+              <button class="refresh-btn" onclick="loadAiHistory(this)">↻</button>
+            </div>
+            <div class="panel-body" id="aiHistory">
+              <div class="empty-state">
+                <div class="empty-icon">🤖</div>
+                <p>No analyses yet — upload a file to ai-uploads bucket</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- LOGS -->
+      <div id="section-logs" style="display:none">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Activity <span>Log</span></div>
+            <div class="page-subtitle">Real-time event stream</div>
+          </div>
+          <button class="btn btn-ghost" onclick="loadLogs()">↻ Refresh</button>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">📊 Recent Events</div>
+            <span style="font-size:10px;color:var(--text-dim)">Last 50 events</span>
+          </div>
+          <div class="panel-body" id="logList">
+            <div class="empty-state">
+              <div class="empty-icon">📊</div>
+              <p>No activity yet</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- IAM -->
+<div id="section-iam" style="display:none">
+  <div class="page-header">
+    <div><div class="page-title">IAM <span>Console</span></div><div class="page-subtitle">Users, Roles and Permissions</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="showIamTab('users')">👤 Users</button>
+      <button class="btn btn-ghost" onclick="showIamTab('roles')">🎭 Roles</button>
+      <button class="btn btn-ghost" onclick="showIamTab('permissions')">🔑 Permissions</button>
+    </div>
+  </div>
+
+  <!-- Users Tab -->
+  <div id="iam-tab-users">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">👤 Users</div>
+        <div style="display:flex;gap:8px">
+          <button class="refresh-btn" onclick="loadUsers(this)">↻</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('createUser')">+ New User</button>
+        </div>
+      </div>
+      <div class="panel-body" id="userList">
+        <div class="empty-state"><div class="empty-icon">👤</div><p>Loading...</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Roles Tab -->
+  <div id="iam-tab-roles" style="display:none">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">🎭 Roles</div>
+        <div style="display:flex;gap:8px">
+          <button class="refresh-btn" onclick="loadRoles(this)">↻</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('createRole')">+ New Role</button>
+        </div>
+      </div>
+      <div class="panel-body" id="roleList">
+        <div class="empty-state"><div class="empty-icon">🎭</div><p>Loading...</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Permissions Tab -->
+  <div id="iam-tab-permissions" style="display:none">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">🔑 All Permissions</div>
+        <div style="display:flex;gap:8px">
+          <button class="refresh-btn" onclick="loadPermissions(this)">↻</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('createPermission')">+ New Permission</button>
+        </div>
+      </div>
+      <div class="panel-body" id="permissionList">
+        <div class="empty-state"><div class="empty-icon">🔑</div><p>Loading...</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+      <!-- ABOUT -->
+      <div id="section-about" style="display:none">
+        <div class="page-header">
+          <div>
+            <div class="page-title">About <span>PocketCloud</span></div>
+            <div class="page-subtitle">Local AWS simulator for developers</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-body" style="line-height:2">
+            <div style="font-size:13px;color:var(--text-mid)">
+              <p style="margin-bottom:16px">PocketCloud is a local cloud infrastructure simulator built as a portfolio
+                project.</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div style="background:var(--surface2);border-radius:8px;padding:16px;border:1px solid var(--border)">
+                  <div
+                    style="font-size:10px;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">
+                    Stack</div>
+                  <div style="font-size:11px;color:var(--accent)">Node.js + Express</div>
+                  <div style="font-size:11px">Docker + Dockerode</div>
+                  <div style="font-size:11px">Vanilla JS Dashboard</div>
+                </div>
+                <div style="background:var(--surface2);border-radius:8px;padding:16px;border:1px solid var(--border)">
+                  <div
+                    style="font-size:10px;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">
+                    Services</div>
+                  <div style="font-size:11px;color:var(--accent)">S3 Storage + Triggers</div>
+                  <div style="font-size:11px">SQS Message Queues</div>
+                  <div style="font-size:11px">Lambda · Cron · IAM</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+  <!-- VPC Modal -->
+  <div class="modal-overlay" id="modal-createVpc" onclick="closeModal('createVpc')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Create VPC</h3>
+      <p>Define an isolated virtual network.</p>
+      <div class="form-group"><label class="form-label">VPC Name</label><input type="text" id="newVpcName"
+          placeholder="my-vpc"></div>
+      <div class="form-group"><label class="form-label">CIDR Block</label><input type="text" id="newVpcCidr"
+          placeholder="10.0.0.0/16"></div>
+      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('createVpc')">Cancel</button><button
+          class="btn btn-primary" onclick="createVpc()">Create</button></div>
+    </div>
+  </div>
+
+  <!-- Subnet Modal -->
+  <div class="modal-overlay" id="modal-createSubnet" onclick="closeModal('createSubnet')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Create Subnet</h3>
+      <p>Add a subnet to your VPC.</p>
+      <div class="form-group"><label class="form-label">Subnet Name</label><input type="text" id="newSubnetName"
+          placeholder="public-subnet-1"></div>
+      <div class="form-group"><label class="form-label">CIDR Block</label><input type="text" id="newSubnetCidr"
+          placeholder="10.0.1.0/24"></div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select id="newSubnetType">
+          <option value="public">Public</option>
+          <option value="private">Private</option>
+        </select>
+      </div>
+      <div class="modal-actions"><button class="btn btn-ghost"
+          onclick="closeModal('createSubnet')">Cancel</button><button class="btn btn-primary"
+          onclick="createSubnet()">Create</button></div>
+    </div>
+  </div>
+
+  <!-- EC2 Launch Modal -->
+  <div class="modal-overlay" id="modal-launchEc2" onclick="closeModal('launchEc2')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Launch EC2 Instance</h3>
+      <p>Launches a real Docker container as a VM.</p>
+      <div class="form-group"><label class="form-label">Instance Name</label><input type="text" id="newEc2Name"
+          placeholder="web-server-1"></div>
+      <div class="form-group">
+        <label class="form-label">Instance Type</label>
+        <select id="newEc2Type">
+          <option value="t2.nano">t2.nano — 256MB RAM</option>
+          <option value="t2.micro" selected>t2.micro — 512MB RAM</option>
+          <option value="t2.small">t2.small — 1GB RAM</option>
+          <option value="t2.medium">t2.medium — 2GB RAM</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">AMI (Image)</label>
+        <select id="newEc2Ami">
+          <option value="ami-pocketcloud-ubuntu">Ubuntu 22.04</option>
+          <option value="ami-pocketcloud-alpine">Alpine Linux</option>
+          <option value="ami-pocketcloud-node">Node.js 18</option>
+          <option value="ami-pocketcloud-nginx">Nginx</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">VPC</label>
+        <select id="newEc2Vpc" onchange="loadSubnetsForLaunch()"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Subnet</label>
+        <select id="newEc2Subnet"></select>
+      </div>
+      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('launchEc2')">Cancel</button><button
+          class="btn btn-primary" onclick="launchEc2()">🚀 Launch</button></div>
+    </div>
+  </div>
+  <!-- Create Permission Modal -->
+<div class="modal-overlay" id="modal-createPermission" onclick="closeModal('createPermission')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>Create Permission</h3>
+    <p>Define a new permission key that can be assigned to roles.</p>
+    <div class="form-group">
+      <label class="form-label">Permission Key</label>
+      <input type="text" id="newPermKey" placeholder="s3:GetObject">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input type="text" id="newPermDesc" placeholder="Read objects from S3 buckets">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('createPermission')">Cancel</button>
+      <button class="btn btn-primary" onclick="createPermission()">Create Permission</button>
+    </div>
+  </div>
+</div>
+  <!-- Create Role Modal -->
+<div class="modal-overlay" id="modal-createRole" onclick="closeModal('createRole')">
+  <div class="modal" onclick="event.stopPropagation()" style="width:500px">
+    <h3>Create Role</h3>
+    <p>Define a set of permissions for a role.</p>
+    <div class="form-group">
+      <label class="form-label">Role Name</label>
+      <input type="text" id="newRoleName" placeholder="data-scientist">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input type="text" id="newRoleDesc" placeholder="Access to S3 and RDS">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Permissions</label>
+      <div id="permCheckboxes" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:200px;overflow-y:auto;background:var(--surface2);border-radius:7px;padding:12px;border:1px solid var(--border)"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('createRole')">Cancel</button>
+      <button class="btn btn-primary" onclick="createRole()">Create Role</button>
+    </div>
+  </div>
+</div>
+
+  <!-- MODALS -->
+  <div class="modal-overlay" id="modal-createBucket" onclick="closeModal('createBucket')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Create Bucket</h3>
+      <p>Bucket names must be lowercase with no spaces.</p>
+      <div class="form-group">
+        <label class="form-label">Bucket Name</label>
+        <input type="text" id="newBucketName" placeholder="my-bucket"
+          onkeydown="if(event.key==='Enter') createBucket()">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('createBucket')">Cancel</button>
+        <button class="btn btn-primary" onclick="createBucket()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-createQueue" onclick="closeModal('createQueue')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Create Queue</h3>
+      <p>Create a new SQS-compatible message queue.</p>
+      <div class="form-group">
+        <label class="form-label">Queue Name</label>
+        <input type="text" id="newQueueName" placeholder="my-queue" onkeydown="if(event.key==='Enter') createQueue()">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('createQueue')">Cancel</button>
+        <button class="btn btn-primary" onclick="createQueue()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-createCron" onclick="closeModal('createCron')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Create Schedule</h3>
+      <p>Schedule a function to run automatically.</p>
+      <div class="form-group">
+        <label class="form-label">Job Name</label>
+        <input type="text" id="newCronName" placeholder="daily-cleanup">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cron Expression</label>
+        <input type="text" id="newCronSchedule" placeholder="*/10 * * * * *  (every 10 seconds)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Function Name</label>
+        <input type="text" id="newCronFunction" placeholder="logger-fn">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('createCron')">Cancel</button>
+        <button class="btn btn-primary" onclick="createCronJob()">Schedule</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-createUser" onclick="closeModal('createUser')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Create IAM User</h3>
+      <p>New user will be created with selected permissions.</p>
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" id="newUsername" placeholder="developer1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="text" id="newUserPassword" placeholder="min 6 characters">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Permissions (comma separated)</label>
+        <input type="text" id="newUserPerms" placeholder="s3:read, s3:write, queues:read">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('createUser')">Cancel</button>
+        <button class="btn btn-primary" onclick="createUser()">Create User</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="modal-createRoute" onclick="closeModal('createRoute')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Create Gateway Route</h3>
+      <p>Route incoming requests to a target service.</p>
+      <div class="form-group">
+        <label class="form-label">Route ID</label>
+        <input type="text" id="newRouteId" placeholder="my-api">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Path (e.g. /files)</label>
+        <input type="text" id="newRoutePath" placeholder="/files">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Target URL</label>
+        <input type="text" id="newRouteTarget" placeholder="http://localhost:3000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Method</label>
+        <input type="text" id="newRouteMethod" placeholder="ANY">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('createRoute')">Cancel</button>
+        <button class="btn btn-primary" onclick="createGatewayRoute()">Create</button>
+      </div>
+    </div>
+  </div>
+  <!-- Create REST API modal -->
+  <div class="modal-overlay" id="modal-createRestApi" onclick="closeModal('createRestApi')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Create REST API</h3>
+      <p>Create a new AWS-style REST API with resources and methods.</p>
+      <div class="form-group">
+        <label class="form-label">API Name</label>
+        <input type="text" id="newApiName" placeholder="my-rest-api">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description (optional)</label>
+        <input type="text" id="newApiDesc" placeholder="My API description">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('createRestApi')">Cancel</button>
+        <button class="btn btn-primary" onclick="createRestApi()">Create</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="modal-addRule" onclick="closeModal('addRule')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>Add Inbound Rule</h3>
+    <p>Allow traffic on a specific port.</p>
+    <input type="hidden" id="ruleSgId">
+    <div class="form-group">
+      <label class="form-label">Protocol</label>
+      <select id="ruleProtocol">
+        <option value="tcp">TCP</option>
+        <option value="udp">UDP</option>
+        <option value="-1">All Traffic</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Port</label>
+      <input type="text" id="rulePort" placeholder="80">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Source</label>
+      <input type="text" id="ruleSource" placeholder="0.0.0.0/0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input type="text" id="ruleDesc" placeholder="HTTP">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('addRule')">Cancel</button>
+      <button class="btn btn-primary" onclick="addSecurityRule()">Add Rule</button>
+    </div>
+  </div>
+</div>
+
+  <!-- Create Resource modal -->
+  <div class="modal-overlay" id="modal-createResource" onclick="closeModal('createResource')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Add Resource</h3>
+      <p>Add a path segment. Use {param} for path parameters.</p>
+      <div class="form-group">
+        <label class="form-label">Parent Resource</label>
+        <select id="newResourceParent"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Path Part (e.g. users or {userId})</label>
+        <input type="text" id="newResourcePath" placeholder="users">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('createResource')">Cancel</button>
+        <button class="btn btn-primary" onclick="createResource()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Method modal -->
+  <div class="modal-overlay" id="modal-addMethod" onclick="closeModal('addMethod')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Add Method</h3>
+      <p>Add an HTTP method and configure its integration.</p>
+      <input type="hidden" id="methodResourceId">
+      <div class="form-group">
+        <label class="form-label">HTTP Method</label>
+        <select id="newMethodHttp">
+          <option>GET</option>
+          <option>POST</option>
+          <option>PUT</option>
+          <option>DELETE</option>
+          <option>ANY</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Auth Type</label>
+        <select id="newMethodAuth">
+          <option value="NONE">None</option>
+          <option value="AWS_IAM">AWS IAM</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Integration Type</label>
+        <select id="newIntegrationType" onchange="toggleIntegrationUri()">
+          <option value="MOCK">Mock</option>
+          <option value="HTTP_PROXY">HTTP Proxy</option>
+          <option value="AWS_PROXY">Lambda</option>
+        </select>
+      </div>
+      <div class="form-group" id="integrationUriGroup" style="display:none">
+        <label class="form-label">Target URI</label>
+        <input type="text" id="newIntegrationUri" placeholder="http://localhost:3000 or arn:aws:lambda:...">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('addMethod')">Cancel</button>
+        <button class="btn btn-primary" onclick="addMethod()">Add Method</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deploy modal -->
+  <div class="modal-overlay" id="modal-deploy" onclick="closeModal('deploy')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Deploy API</h3>
+      <p>Deploy your API to a stage to make it invokable.</p>
+      <div class="form-group">
+        <label class="form-label">Stage Name</label>
+        <input type="text" id="newStageName" placeholder="dev">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('deploy')">Cancel</button>
+        <button class="btn btn-primary" onclick="deployApi()">Deploy</button>
+      </div>
+    </div>
+  </div>
+  <!-- SNS Modal -->
+  <div class="modal-overlay" id="modal-createTopic" onclick="closeModal('createTopic')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Create SNS Topic</h3>
+      <p>Create a pub/sub messaging topic.</p>
+      <div class="form-group"><label class="form-label">Topic Name</label><input type="text" id="newTopicName"
+          placeholder="order-events"></div>
+      <div class="modal-actions"><button class="btn btn-ghost"
+          onclick="closeModal('createTopic')">Cancel</button><button class="btn btn-primary"
+          onclick="createTopic()">Create</button></div>
+    </div>
+  </div>
+
+  <!-- Subscribe Modal -->
+  <div class="modal-overlay" id="modal-subscribe" onclick="closeModal('subscribe')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Subscribe to Topic</h3>
+      <p>Add a subscriber endpoint.</p>
+      <input type="hidden" id="subscribeTopicName">
+      <div class="form-group">
+        <label class="form-label">Protocol</label>
+        <select id="subProtocol">
+          <option value="http">HTTP Webhook</option>
+          <option value="https">HTTPS Webhook</option>
+          <option value="email">Email (logged)</option>
+          <option value="sqs">SQS Queue</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Endpoint</label><input type="text" id="subEndpoint"
+          placeholder="http://localhost:3000/webhook or queue-name"></div>
+      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('subscribe')">Cancel</button><button
+          class="btn btn-primary" onclick="subscribeTopic()">Subscribe</button></div>
+    </div>
+  </div>
+
+  <!-- Publish Modal -->
+  <div class="modal-overlay" id="modal-publish" onclick="closeModal('publish')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Publish Message</h3>
+      <p>Send message to all subscribers.</p>
+      <input type="hidden" id="publishTopicName">
+      <div class="form-group"><label class="form-label">Subject</label><input type="text" id="publishSubject"
+          placeholder="New Order"></div>
+      <div class="form-group"><label class="form-label">Message</label><textarea id="publishMessage"
+          style="min-height:80px" placeholder="Order #123 placed!"></textarea></div>
+      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('publish')">Cancel</button><button
+          class="btn btn-primary" onclick="publishMessage()">Publish 📨</button></div>
+    </div>
+  </div>
+
+  <!-- Secrets Modal -->
+  <div class="modal-overlay" id="modal-createSecret" onclick="closeModal('createSecret')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Store Secret 🔐</h3>
+      <p>Value will be encrypted at rest.</p>
+      <div class="form-group"><label class="form-label">Secret Name</label><input type="text" id="newSecretName"
+          placeholder="db-password"></div>
+      <div class="form-group"><label class="form-label">Secret Value</label><input type="text" id="newSecretValue"
+          placeholder="supersecret123"></div>
+      <div class="form-group"><label class="form-label">Description (optional)</label><input type="text"
+          id="newSecretDesc" placeholder="Production DB password"></div>
+      <div class="modal-actions"><button class="btn btn-ghost"
+          onclick="closeModal('createSecret')">Cancel</button><button class="btn btn-primary"
+          onclick="createSecret()">Store</button></div>
+    </div>
+  </div>
+
+  <!-- RDS Modal -->
+  <div class="modal-overlay" id="modal-createRds" onclick="closeModal('createRds')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Create RDS Instance</h3>
+      <p>Spins up a real PostgreSQL container. Takes ~30 seconds.</p>
+      <div class="form-group"><label class="form-label">Database Name</label><input type="text" id="newRdsDb"
+          placeholder="myapp"></div>
+      <div class="form-group"><label class="form-label">Username</label><input type="text" id="newRdsUser"
+          placeholder="admin"></div>
+      <div class="form-group"><label class="form-label">Password</label><input type="text" id="newRdsPass"
+          placeholder="secret123"></div>
+      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('createRds')">Cancel</button><button
+          class="btn btn-primary" onclick="createRdsInstance()">Create 🗄️</button></div>
+    </div>
+  </div>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    const API = window.location.origin;
+    let selectedBucket = null;
+
+    // ─── AUTH ───
+    const token = localStorage.getItem('pc_token');
+    const currentUser = JSON.parse(localStorage.getItem('pc_user') || 'null');
+    if (!token) window.location.href = '/login.html';
+
+    const authHeaders = { 'x-api-key': token };
+
+    function logout() {
+      localStorage.removeItem('pc_token');
+      localStorage.removeItem('pc_user');
+      localStorage.clear();
+      window.location.replace('/login.html');
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      if (currentUser) {
+        document.getElementById('statusText').textContent = `${currentUser.username} (${currentUser.role})`;
+      }
+    });
+    async function loadVpcsForDropdown() {
+      try {
+        const res = await fetch(`${API}/vpc`, { headers: authHeaders });
+        const data = await res.json();
+        const vpcs = data.vpcs || [];
+        const select = document.getElementById('newEc2Vpc');
+        if (select) {
+          select.innerHTML = vpcs.length > 0
+            ? vpcs.map(v => `<option value="${v.id}">${v.name} (${v.cidrBlock})</option>`).join('')
+            : '<option value="">No VPCs — create one first</option>';
+          if (vpcs.length > 0) loadSubnetsForLaunch();
+        }
+      } catch (err) {
+        console.error('Failed to load VPCs for dropdown:', err);
+      }
+    }
+    // ─── BILLING ───
+    async function loadBilling() {
+      try {
+        const res = await fetch(`${API}/billing`, { headers: authHeaders });
+        const data = await res.json();
+
+        // Update stats
+        document.getElementById('billTotal').textContent = '$' + (data.totalCost || 0).toFixed(6);
+        document.getElementById('billMonthly').textContent = '$' + (data.monthlyCost || 0).toFixed(6);
+        document.getElementById('billToday').textContent = '$' + (data.todayCost || 0).toFixed(6);
+        document.getElementById('billServices').textContent = Object.keys(data.byService || {}).length;
+
+        // Cost by service
+        const serviceContainer = document.getElementById('billByService');
+        const services = Object.entries(data.byService || {});
+        if (services.length === 0) {
+          serviceContainer.innerHTML = '<div class="empty-state"><div class="empty-icon">💰</div><p>No costs yet</p></div>';
+        } else {
+          const maxCost = Math.max(...services.map(([, v]) => v.cost), 0.000001);
+          const serviceIcons = { s3: '📦', lambda: '⚡', ec2: '🖥️', rds: '🗄️', sqs: '📨', sns: '📢', secrets: '🔑' };
+          serviceContainer.innerHTML = services
+            .sort((a, b) => b[1].cost - a[1].cost)
+            .map(([service, info]) => `
+          <div style="margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px">
+              <span>${serviceIcons[service] || '☁️'} ${service.toUpperCase()}</span>
+              <span style="color:var(--accent)">$${info.cost.toFixed(8)} (${info.requests} reqs)</span>
+            </div>
+            <div style="background:var(--surface2);border-radius:4px;height:6px;overflow:hidden">
+              <div style="background:var(--accent);height:100%;width:${(info.cost / maxCost * 100)}%;border-radius:4px;transition:width 0.5s"></div>
+            </div>
+          </div>
+        `).join('');
+        }
+
+        // Recent transactions
+        const txContainer = document.getElementById('billTransactions');
+        const txs = data.recentTransactions || [];
+        if (txs.length === 0) {
+          txContainer.innerHTML = '<div class="empty-state"><div class="empty-icon">🧾</div><p>No transactions yet</p></div>';
+        } else {
+          txContainer.innerHTML = txs.map(tx => `
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px">
+          <div>
+            <span style="color:var(--accent)">${tx.service.toUpperCase()}</span>
+            <span style="color:var(--text-dim);margin-left:8px">${tx.operation}</span>
+          </div>
+          <div style="text-align:right">
+            <div style="color:var(--accent3)">$${tx.cost.toFixed(8)}</div>
+            <div style="color:var(--text-dim);font-size:9px">${new Date(tx.timestamp).toLocaleTimeString()}</div>
+          </div>
+        </div>
+      `).join('');
+        }
+
+        // Price list
+        const pricingContainer = document.getElementById('billPricing');
+        const pricing = data.pricing || {};
+        pricingContainer.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        ${Object.entries(pricing).map(([key, price]) => `
+          <div style="background:var(--surface2);border-radius:7px;padding:10px;border:1px solid var(--border)">
+            <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">${key.replace(/_/g, ' ').toUpperCase()}</div>
+            <div style="font-size:12px;color:var(--accent)">$${price.toFixed(8)}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+      } catch (err) {
+        console.error('Billing load error:', err);
+      }
+    }
+
+    async function resetBilling() {
+      if (!confirm('Reset all billing to $0.00?')) return;
+      try {
+        await fetch(`${API}/billing/reset`, { method: 'DELETE', headers: authHeaders });
+        showToast('Billing reset to $0.00!');
+        loadBilling();
+      } catch { showToast('Failed to reset', 'error'); }
+    }
+    function openAddRuleModal(sgId) {
+  document.getElementById('ruleSgId').value = sgId;
+  openModal('addRule');
+}
+
+async function addSecurityRule() {
+  const sgId = document.getElementById('ruleSgId').value;
+  const protocol = document.getElementById('ruleProtocol').value;
+  const port = document.getElementById('rulePort').value;
+  const source = document.getElementById('ruleSource').value || '0.0.0.0/0';
+  const description = document.getElementById('ruleDesc').value;
+
+  if (!port) return showToast('Port required', 'error');
+
+  try {
+    const res = await fetch(`${API}/vpc/security-groups/${sgId}/rules`, {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        protocol,
+        fromPort: parseInt(port),
+        toPort: parseInt(port),
+        source,
+        description
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    closeModal('addRule');
+    showToast('Rule added!');
+    // Refresh security groups
+    if (selectedVpcId) selectVpc(selectedVpcId, '');
+  } catch (err) { showToast(err.message, 'error'); }
+}
+// ─── IAM ───
+function showIamTab(tab) {
+  ['users', 'roles', 'permissions'].forEach(t => {
+    document.getElementById(`iam-tab-${t}`).style.display = t === tab ? 'block' : 'none';
+  });
+  if (tab === 'users') loadUsers();
+  if (tab === 'roles') loadRoles();
+  if (tab === 'permissions') loadPermissions();
+}
+
+async function loadRoles(btn) {
+  if (btn) { btn.classList.add('spinning'); setTimeout(() => btn.classList.remove('spinning'), 600); }
+  try {
+    const res = await fetch(`${API}/iam/roles`, { headers: authHeaders });
+    const data = await res.json();
+    const roles = data.roles || [];
+    const container = document.getElementById('roleList');
+
+    const roleColors = {
+      'admin': 'var(--danger)',
+      'developer': 'var(--accent)',
+      'readonly': 'var(--text-dim)',
+      'devops': 'var(--accent2)'
+    };
+
+    container.innerHTML = roles.map(r => `
+      <div class="bucket-item" style="cursor:default">
+        <div class="bucket-name">
+          <div class="bucket-icon" style="background:rgba(124,106,247,0.15)">🎭</div>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px">
+              ${r.name}
+              ${r.isSystem ? '<span class="badge badge-green">System</span>' : '<span class="badge badge-purple">Custom</span>'}
+            </div>
+            <div class="bucket-meta">${r.description}</div>
+            <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">
+              ${r.permissions.map(p => `<span class="perm-tag" style="color:${roleColors[r.id]||'var(--accent)'}">${p}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+        ${!r.isSystem ? `<button class="btn btn-danger btn-sm" onclick="deleteRole('${r.id}')">Delete</button>` : ''}
+      </div>
+    `).join('');
+  } catch {
+    document.getElementById('roleList').innerHTML = '<div class="empty-state"><p style="color:var(--danger)">Failed</p></div>';
+  }
+}
+
+async function loadPermissions(btn) {
+  if (btn) { btn.classList.add('spinning'); setTimeout(() => btn.classList.remove('spinning'), 600); }
+  const container = document.getElementById('permissionList');
+  try {
+    const res = await fetch(`${API}/iam/permissions`, { headers: authHeaders });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const perms = data.permissions || {};
+
+    if (Object.keys(perms).length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔑</div><p>No permissions defined yet. Click + New Permission to add one.</p></div>';
+      return;
+    }
+
+    // Group by service
+    const grouped = {};
+    Object.entries(perms).forEach(([key, desc]) => {
+      const service = key.split(':')[0];
+      if (!grouped[service]) grouped[service] = [];
+      grouped[service].push({ key, desc });
+    });
+
+    container.innerHTML = Object.entries(grouped).map(([service, perms]) => `
+      <div style="margin-bottom:20px">
+        <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">
+          ${service.toUpperCase()}
+        </div>
+        ${perms.map(p => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface2);border-radius:6px;margin-bottom:4px;font-size:11px">
+            <span class="perm-tag">${p.key}</span>
+            <span style="color:var(--text-dim)">${p.desc}</span>
+          </div>
+        `).join('')}
+      </div>
+    `).join('');
+  } catch (err) {
+    container.innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Could not load permissions — ${err.message}</p><p style="margin-top:8px;font-size:10px;color:var(--text-dim)">Make sure the server is running and the /iam/permissions endpoint exists.</p></div>`;
+  }
+}
+
+async function openCreateRoleModal() {
+  // Load permissions checkboxes
+  try {
+    const res = await fetch(`${API}/iam/permissions`, { headers: authHeaders });
+    const data = await res.json();
+    const perms = data.permissions || {};
+    document.getElementById('permCheckboxes').innerHTML = Object.entries(perms).map(([key, desc]) => `
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer">
+        <input type="checkbox" value="${key}" style="width:auto">
+        <span class="perm-tag">${key}</span>
+        <span style="color:var(--text-dim);font-size:10px">${desc}</span>
+      </label>
+    `).join('');
+  } catch {
+    document.getElementById('permCheckboxes').innerHTML = '<p style="color:var(--text-dim);font-size:11px">Could not load permissions.</p>';
+  }
+  _openModalEl('createRole');
+}
+
+async function createRole() {
+  const name = document.getElementById('newRoleName').value.trim();
+  const description = document.getElementById('newRoleDesc').value.trim();
+  const checked = [...document.querySelectorAll('#permCheckboxes input:checked')].map(cb => cb.value);
+
+  if (!name) return showToast('Role name required', 'error');
+  if (checked.length === 0) return showToast('Select at least one permission', 'error');
+
+  try {
+    const res = await fetch(`${API}/iam/roles`, {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, description, permissions: checked })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    closeModal('createRole');
+    showToast(`Role "${name}" created!`);
+    loadRoles();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function deleteRole(id) {
+  if (!confirm(`Delete role "${id}"?`)) return;
+  try {
+    await fetch(`${API}/iam/roles/${id}`, { method: 'DELETE', headers: authHeaders });
+    showToast('Role deleted');
+    loadRoles();
+  } catch { showToast('Failed', 'error'); }
+}
+
+
+async function createPermission() {
+  const key = document.getElementById('newPermKey').value.trim();
+  const desc = document.getElementById('newPermDesc').value.trim();
+  if (!key) return showToast('Permission key required (e.g. s3:GetObject)', 'error');
+  if (!key.includes(':')) return showToast('Key must be in format service:Action', 'error');
+  try {
+    const res = await fetch(`${API}/iam/permissions`, {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, description: desc })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    closeModal('createPermission');
+    showToast(`Permission "${key}" created!`);
+    loadPermissions();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function deleteSecurityRule(sgId, index) {
+  if (!confirm('Delete this rule?')) return;
+  try {
+    await fetch(`${API}/vpc/security-groups/${sgId}/rules/${index}`, {
+      method: 'DELETE',
+      headers: authHeaders
+    });
+    showToast('Rule deleted');
+    if (selectedVpcId) selectVpc(selectedVpcId, '');
+  } catch { showToast('Failed', 'error'); }
+}
+
+    // ─── AI ANALYZER ───
+async function checkOllamaStatus() {
+  const dot = document.getElementById('aiStatusDot');
+  const text = document.getElementById('aiStatusText');
+  const sub = document.getElementById('aiStatusSub');
+
+  try {
+    const res = await fetch(`${API}/ai/status`, { headers: authHeaders });
+    const data = await res.json();
+
+    if (data.running) {
+      dot.style.background = 'var(--accent)';
+      dot.style.boxShadow = '0 0 8px var(--accent)';
+      text.textContent = '✅ Ollama is running';
+      sub.textContent = `Model: ${data.model} · Ready to analyze`;
+    } else {
+      dot.style.background = 'var(--danger)';
+      text.textContent = '❌ Ollama is not running';
+      sub.textContent = 'Start Ollama: ollama serve';
+    }
+  } catch {
+    dot.style.background = 'var(--danger)';
+    text.textContent = '❌ Cannot reach AI service';
+    sub.textContent = 'Make sure Ollama is running';
+  }
+}
+
+async function analyzeText() {
+  const text = document.getElementById('aiInputText').value.trim();
+  if (!text) return showToast('Enter some text to analyze', 'error');
+
+  const btn = event.target;
+  btn.textContent = '⏳ Analyzing...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API}/ai/analyze`, {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    const result = data.analysis;
+    document.getElementById('aiTextResult').style.display = 'block';
+    document.getElementById('aiTextResultBody').innerHTML = `
+      <div style="margin-bottom:8px"><span style="color:var(--text-dim)">Summary:</span> <span style="color:var(--text)">${result.summary}</span></div>
+      <div style="margin-bottom:8px"><span style="color:var(--text-dim)">Sentiment:</span> <span style="color:${result.sentiment==='positive'?'var(--accent)':result.sentiment==='negative'?'var(--danger)':'var(--text-mid)'}">${result.sentiment}</span></div>
+      <div style="margin-bottom:8px"><span style="color:var(--text-dim)">Topics:</span> ${(result.topics||[]).map(t=>`<span class="perm-tag">${t}</span>`).join(' ')}</div>
+      <div style="margin-bottom:8px"><span style="color:var(--text-dim)">Tags:</span> ${(result.tags||[]).map(t=>`<span class="badge badge-purple">${t}</span>`).join(' ')}</div>
+      <div><span style="color:var(--text-dim)">Word Count:</span> <span style="color:var(--accent)">${result.wordCount}</span></div>
+    `;
+    showToast('Analysis complete! 🤖');
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.textContent = '🤖 Analyze with AI';
+    btn.disabled = false;
+  }
+}
+
+async function uploadToAiBucket(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  // Make sure ai-uploads bucket exists
+  await fetch(`${API}/buckets/ai-uploads`, { method: 'POST', headers: authHeaders }).catch(() => {});
+
+  const form = new FormData();
+  form.append('file', file);
+
+  try {
+    await fetch(`${API}/buckets/ai-uploads/objects/${file.name}`, {
+      method: 'PUT', body: form, headers: authHeaders
+    });
+    showToast(`"${file.name}" uploaded to ai-uploads! AI analyzing...`);
+    setTimeout(() => loadAiHistory(), 5000);
+  } catch { showToast('Upload failed', 'error'); }
+}
+
+async function loadAiHistory() {
+  // Show files from ai-uploads bucket as history
+  try {
+    const res = await fetch(`${API}/buckets/ai-uploads/objects`, { headers: authHeaders });
+    const data = await res.json();
+    const objects = data.objects || [];
+    const container = document.getElementById('aiHistory');
+
+    if (objects.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">🤖</div><p>No files analyzed yet</p></div>';
+      return;
+    }
+
+    container.innerHTML = objects.map(obj => `
+      <div class="bucket-item" style="cursor:default">
+        <div class="bucket-name">
+          <div class="bucket-icon" style="background:rgba(124,106,247,0.15)">🤖</div>
+          <div>
+            <div>${obj.key}</div>
+            <div class="bucket-meta">Analyzed by Llama3.2 · ai-uploads bucket</div>
+          </div>
+        </div>
+        <span class="badge badge-green">Processed</span>
+      </div>
+    `).join('');
+  } catch {}
+}
+    // ─── VPC ───
+    let selectedVpcId = null;
+    let selectedEc2Id = null;
+
+    async function loadVpcs(btn) {
+      if (btn) { btn.classList.add('spinning'); setTimeout(() => btn.classList.remove('spinning'), 600); }
+      try {
+        const res = await fetch(`${API}/vpc`, { headers: authHeaders });
+        const data = await res.json();
+        const vpcs = data.vpcs || [];
+        const container = document.getElementById('vpcList');
+        if (vpcs.length === 0) { container.innerHTML = '<div class="empty-state"><div class="empty-icon">🌐</div><p>No VPCs yet</p></div>'; return; }
+        container.innerHTML = vpcs.map(v => `
+      <div class="bucket-item ${selectedVpcId === v.id ? 'selected' : ''}" onclick="selectVpc('${v.id}','${v.name}')">
+        <div class="bucket-name">
+          <div class="bucket-icon" style="background:rgba(124,106,247,0.15)">🌐</div>
+          <div>
+            <div>${v.name} ${v.isDefault ? '<span class="badge badge-green">default</span>' : ''}</div>
+            <div class="bucket-meta">${v.cidrBlock} · ${v.subnets.length} subnets · ${v.state}</div>
+          </div>
+        </div>
+        <div class="bucket-actions">
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();selectVpc('${v.id}','${v.name}')">Select</button>
+          <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteVpc('${v.id}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+      } catch { document.getElementById('vpcList').innerHTML = '<div class="empty-state"><p style="color:var(--danger)">Failed</p></div>'; }
+    }
+
+    async function createVpc() {
+      const name = document.getElementById('newVpcName').value.trim();
+      const cidrBlock = document.getElementById('newVpcCidr').value.trim();
+      if (!name || !cidrBlock) return showToast('Name and CIDR required', 'error');
+      try {
+        const res = await fetch(`${API}/vpc`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ name, cidrBlock }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        closeModal('createVpc');
+        showToast(`VPC "${name}" created!`);
+        loadVpcs();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function selectVpc(id, name) {
+      selectedVpcId = id;
+      document.getElementById('selectedVpcLabel').textContent = `/ ${name}`;
+      loadVpcs();
+
+      async function loadVpcsForDropdown() {
+        try {
+          const res = await fetch(`${API}/vpc`, { headers: authHeaders });
+          const data = await res.json();
+          const vpcs = data.vpcs || [];
+          const select = document.getElementById('newEc2Vpc');
+          if (select) {
+            select.innerHTML = vpcs.map(v => `<option value="${v.id}">${v.name} (${v.cidrBlock})</option>`).join('') || '<option>No VPCs — create one first</option>';
+            if (vpcs.length > 0) loadSubnetsForLaunch();
+          }
+        } catch { }
+      }
+      // Load subnets
+      const res = await fetch(`${API}/vpc/${id}/subnets`, { headers: authHeaders });
+      const data = await res.json();
+      const subnets = data.subnets || [];
+      const container = document.getElementById('subnetList');
+      if (subnets.length === 0) { container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔲</div><p>No subnets yet</p></div>'; }
+      else {
+        container.innerHTML = subnets.map(s => `
+      <div class="bucket-item" style="cursor:default">
+        <div class="bucket-name">
+          <div class="bucket-icon" style="background:rgba(${s.type === 'public' ? '0,212,170' : '247,162,106'},0.1)">${s.type === 'public' ? '🌍' : '🔒'}</div>
+          <div><div>${s.name}</div><div class="bucket-meta">${s.cidrBlock} · ${s.type} · ${s.availableIps} IPs available</div></div>
+        </div>
+        <span class="badge badge-green">${s.type}</span>
+      </div>
+    `).join('');
+      }
+      // Load security groups
+      const sgRes = await fetch(`${API}/vpc/${id}/security-groups`, { headers: authHeaders });
+      const sgData = await sgRes.json();
+      const sgs = sgData.securityGroups || [];
+      const sgContainer = document.getElementById('sgList');
+sgContainer.innerHTML = sgs.map(sg => `
+  <div class="bucket-item" style="cursor:default;flex-direction:column;align-items:flex-start">
+    <div style="display:flex;justify-content:space-between;width:100%;margin-bottom:12px">
+      <div class="bucket-name">
+        <div class="bucket-icon" style="background:rgba(255,92,92,0.1)">🔒</div>
+        <div>
+          <div>${sg.name} <span style="font-size:10px;color:var(--text-dim)">${sg.id}</span></div>
+          <div class="bucket-meta">${sg.description}</div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openAddRuleModal('${sg.id}')">+ Add Rule</button>
+    </div>
+    <div style="width:100%">
+      <div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Inbound Rules</div>
+      ${sg.inboundRules.map((rule, index) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface2);border-radius:6px;margin-bottom:4px;font-size:11px">
+          <div style="display:flex;gap:16px">
+            <span style="color:var(--accent)">${rule.protocol.toUpperCase()}</span>
+            <span>Port: <span style="color:var(--accent3)">${rule.fromPort}${rule.toPort !== rule.fromPort ? '-'+rule.toPort : ''}</span></span>
+            <span>Source: <span style="color:var(--text-mid)">${rule.source}</span></span>
+            <span style="color:var(--text-dim)">${rule.description}</span>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteSecurityRule('${sg.id}', ${index})">✕</button>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+`).join('');
+    }
+
+    async function deleteVpc(id) {
+      if (!confirm('Delete this VPC and all its resources?')) return;
+      try { await fetch(`${API}/vpc/${id}`, { method: 'DELETE', headers: authHeaders }); showToast('VPC deleted'); if (selectedVpcId === id) selectedVpcId = null; loadVpcs(); }
+      catch { showToast('Failed', 'error'); }
+    }
+
+    async function createSubnet() {
+      if (!selectedVpcId) return showToast('Select a VPC first', 'error');
+      const name = document.getElementById('newSubnetName').value.trim();
+      const cidrBlock = document.getElementById('newSubnetCidr').value.trim();
+      const type = document.getElementById('newSubnetType').value;
+      if (!name || !cidrBlock) return showToast('Name and CIDR required', 'error');
+      try {
+        const res = await fetch(`${API}/vpc/${selectedVpcId}/subnets`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ name, cidrBlock, type }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        closeModal('createSubnet');
+        showToast('Subnet created!');
+        selectVpc(selectedVpcId, document.getElementById('selectedVpcLabel').textContent.replace('/ ', ''));
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // ─── EC2 ───
+    async function loadEc2Instances(btn) {
+      if (btn) { btn.classList.add('spinning'); setTimeout(() => btn.classList.remove('spinning'), 600); }
+      try {
+        const res = await fetch(`${API}/ec2/instances`, { headers: authHeaders });
+        const data = await res.json();
+        const instances = data.instances || [];
+        const container = document.getElementById('ec2List');
+        if (instances.length === 0) { container.innerHTML = '<div class="empty-state"><div class="empty-icon">🖥️</div><p>No instances yet. Launch one!</p></div>'; return; }
+        const stateColors = { running: 'var(--accent)', stopped: 'var(--text-dim)', pending: 'var(--accent3)', error: 'var(--danger)' };
+        container.innerHTML = instances.map(i => `
+      <div class="bucket-item ${selectedEc2Id === i.id ? 'selected' : ''}" onclick="selectEc2('${i.id}','${i.name}')">
+        <div class="bucket-name">
+          <div class="bucket-icon" style="background:rgba(0,212,170,0.1)">🖥️</div>
+          <div>
+            <div>${i.name} <span style="font-size:10px;color:var(--text-dim)">${i.id}</span></div>
+            <div class="bucket-meta">${i.instanceType} · ${i.ami} · Private: ${i.privateIp} ${i.publicIp ? '· Public: ' + i.publicIp : ''}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;font-weight:600;color:${stateColors[i.state] || 'var(--text-dim)'}">● ${i.state.toUpperCase()}</span>
+          ${i.state === 'running' ? `<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();stopEc2('${i.id}')">⏹ Stop</button>` : ''}
+          ${i.state === 'stopped' ? `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();startEc2('${i.id}')">▶ Start</button>` : ''}
+          <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();terminateEc2('${i.id}')">Terminate</button>
+        </div>
+      </div>
+    `).join('');
+      } catch { document.getElementById('ec2List').innerHTML = '<div class="empty-state"><p style="color:var(--danger)">Failed</p></div>'; }
+    }
+
+    function selectEc2(id, name) {
+      selectedEc2Id = id;
+      document.getElementById('ec2TerminalPanel').style.display = 'block';
+      document.getElementById('terminalInstanceLabel').textContent = name;
+      document.getElementById('terminalOutput').textContent = `$ Connected to ${name} (${id})\n$ _`;
+      loadEc2Instances();
+    }
+
+    async function launchEc2() {
+      const name = document.getElementById('newEc2Name').value.trim();
+      const instanceType = document.getElementById('newEc2Type').value;
+      const ami = document.getElementById('newEc2Ami').value;
+      const vpcId = document.getElementById('newEc2Vpc').value;
+      const subnetId = document.getElementById('newEc2Subnet').value;
+      if (!name || !vpcId) return showToast('Name and VPC required', 'error');
+      try {
+        await fetch(`${API}/ec2/instances`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ name, instanceType, ami, vpcId, subnetId }) });
+        closeModal('launchEc2');
+        showToast('Instance launching... (~15 seconds)');
+        setTimeout(() => loadEc2Instances(), 5000);
+        setTimeout(() => loadEc2Instances(), 15000);
+      } catch { showToast('Failed', 'error'); }
+    }
+
+    async function stopEc2(id) {
+      try { await fetch(`${API}/ec2/instances/${id}/stop`, { method: 'POST', headers: authHeaders }); showToast('Instance stopping...'); setTimeout(() => loadEc2Instances(), 3000); }
+      catch { showToast('Failed', 'error'); }
+    }
+
+    async function startEc2(id) {
+      try { await fetch(`${API}/ec2/instances/${id}/start`, { method: 'POST', headers: authHeaders }); showToast('Instance starting...'); setTimeout(() => loadEc2Instances(), 3000); }
+      catch { showToast('Failed', 'error'); }
+    }
+
+    async function terminateEc2(id) {
+      if (!confirm('Terminate this instance? All data will be lost!')) return;
+      try { await fetch(`${API}/ec2/instances/${id}`, { method: 'DELETE', headers: authHeaders }); showToast('Instance terminated'); if (selectedEc2Id === id) { selectedEc2Id = null; document.getElementById('ec2TerminalPanel').style.display = 'none'; } loadEc2Instances(); }
+      catch { showToast('Failed', 'error'); }
+    }
+    function clearTerminal() {
+  document.getElementById('terminalOutput').textContent = '$ _';
+}
+
+    async function runCommand() {
+      if (!selectedEc2Id) return showToast('Select an instance first', 'error');
+      const command = document.getElementById('terminalCommand').value.trim();
+      if (!command) return;
+      const output = document.getElementById('terminalOutput');
+      output.textContent += `\n$ ${command}\n`;
+      try {
+        const res = await fetch(`${API}/ec2/instances/${selectedEc2Id}/execute`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ command }) });
+        const data = await res.json();
+        output.textContent += data.output || '(no output)';
+        output.textContent += '\n$ _';
+        output.scrollTop = output.scrollHeight;
+        document.getElementById('terminalCommand').value = '';
+      } catch { output.textContent += 'Error executing command\n$ _'; }
+    }
+
+    async function loadSubnetsForLaunch() {
+      const vpcId = document.getElementById('newEc2Vpc').value;
+      if (!vpcId) return;
+      const res = await fetch(`${API}/vpc/${vpcId}/subnets`, { headers: authHeaders });
+      const data = await res.json();
+      const subnets = data.subnets || [];
+      document.getElementById('newEc2Subnet').innerHTML = subnets.map(s => `<option value="${s.id}">${s.name} (${s.cidrBlock})</option>`).join('') || '<option>No subnets</option>';
+    }
+
+    // ─── SERVER STATUS ───
+    async function checkStatus() {
+      try {
+        await fetch(`${API}/health`, { headers: authHeaders });
+        document.getElementById('statusDot').className = 'status-dot';
+        document.getElementById('statStatus').textContent = '🟢';
+        document.getElementById('statStatus').style.color = 'var(--accent)';
+      } catch {
+        document.getElementById('statusDot').className = 'status-dot offline';
+        document.getElementById('statStatus').textContent = '🔴';
+      }
+    }
+
+
+
+    // ─── BUCKETS ───
+    async function loadBuckets(btn) {
+      if (btn) { btn.classList.add('spinning'); setTimeout(() => btn.classList.remove('spinning'), 600); }
+      try {
+        const res = await fetch(`${API}/buckets`, { headers: authHeaders });
+        const data = await res.json();
+        const buckets = data.buckets || [];
+        document.getElementById('statBuckets').textContent = buckets.length;
+
+        const container = document.getElementById('bucketList');
+        if (buckets.length === 0) {
+          container.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><p>No buckets yet. Create one!</p></div>`;
+          document.getElementById('statObjects').textContent = '0';
+          return;
+        }
+
+        let totalObjects = 0;
+        const counts = {};
+        for (const b of buckets) {
+          try {
+            const r = await fetch(`${API}/buckets/${b.name}/objects`, { headers: authHeaders });
+            const d = await r.json();
+            counts[b.name] = d.objects?.length || 0;
+            totalObjects += counts[b.name];
+          } catch { counts[b.name] = 0; }
+        }
+        document.getElementById('statObjects').textContent = totalObjects;
+
+        container.innerHTML = buckets.map(b => `
+        <div class="bucket-item ${selectedBucket === b.name ? 'selected' : ''}" onclick="selectBucket('${b.name}')">
+          <div class="bucket-name">
+            <div class="bucket-icon">📦</div>
+            <div>
+              <div>${b.name}</div>
+              <div class="bucket-meta">${counts[b.name]} object${counts[b.name] !== 1 ? 's' : ''}</div>
+            </div>
+          </div>
+          <div class="bucket-actions">
+            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); selectBucket('${b.name}')">Open</button>
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteBucket('${b.name}')">Delete</button>
+          </div>
+        </div>
+      `).join('');
+      } catch (err) {
+        document.getElementById('bucketList').innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Server offline or unauthorized</p></div>`;
+      }
+    }
+
+    function selectBucket(name) {
+      selectedBucket = name;
+      document.getElementById('selectedBucketLabel').textContent = `/ ${name}`;
+      document.getElementById('uploadBucketLabel').textContent = `→ ${name}`;
+      loadBuckets();
+      loadObjects(name);
+    }
+
+    async function loadObjects(bucketName) {
+      try {
+        const res = await fetch(`${API}/buckets/${bucketName}/objects`, { headers: authHeaders });
+        const data = await res.json();
+        const objects = data.objects || [];
+        const container = document.getElementById('objectList');
+
+        if (objects.length === 0) {
+          container.innerHTML = `<div class="empty-state"><div class="empty-icon">🗂️</div><p>No files in this bucket</p></div>`;
+          return;
+        }
+
+        const icons = { txt: '📄', jpg: '🖼️', jpeg: '🖼️', png: '🖼️', gif: '🖼️', pdf: '📕', json: '📋', mp4: '🎥', mp3: '🎵', zip: '📦', csv: '📊' };
+        const getIcon = key => icons[key.split('.').pop()?.toLowerCase()] || '📄';
+
+        container.innerHTML = objects.map(obj => `
+        <div class="file-item">
+          <div class="file-info">
+            <div class="file-icon">${getIcon(obj.key)}</div>
+            <div>
+              <div>${obj.key}</div>
+              <div class="bucket-meta">${bucketName}</div>
+            </div>
+          </div>
+          <div class="file-actions">
+            <button class="btn btn-ghost btn-sm" onclick="downloadObject('${bucketName}','${obj.key}')">⬇ Download</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteObject('${bucketName}','${obj.key}')">🗑</button>
+          </div>
+        </div>
+      `).join('');
+      } catch (err) {
+        showToast('Failed to load objects', 'error');
+      }
+    }
+
+    async function createBucket() {
+      const name = document.getElementById('newBucketName').value.trim();
+      if (!name) return;
+      try {
+        const res = await fetch(`${API}/buckets/${name}`, { method: 'POST', headers: authHeaders });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        closeModal('createBucket');
+        document.getElementById('newBucketName').value = '';
+        showToast(`Bucket "${name}" created!`, 'success');
+        loadBuckets();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function deleteBucket(name) {
+      if (!confirm(`Delete bucket "${name}" and all its files?`)) return;
+      try {
+        await fetch(`${API}/buckets/${name}`, { method: 'DELETE', headers: authHeaders });
+        if (selectedBucket === name) {
+          selectedBucket = null;
+          document.getElementById('selectedBucketLabel').textContent = '';
+          document.getElementById('objectList').innerHTML = `<div class="empty-state"><div class="empty-icon">👈</div><p>Select a bucket to view files</p></div>`;
+        }
+        showToast(`Bucket "${name}" deleted`, 'success');
+        loadBuckets();
+      } catch (err) { showToast('Failed to delete bucket', 'error'); }
+    }
+
+    async function handleFileSelect(input) {
+      if (!selectedBucket) { showToast('Please select a bucket first!', 'error'); input.value = ''; return; }
+      const files = Array.from(input.files);
+      for (const file of files) await uploadFile(file);
+      input.value = '';
+    }
+
+    async function uploadFile(file) {
+      const status = document.getElementById('uploadStatus');
+      const progress = document.getElementById('uploadProgress');
+      progress.style.display = 'block';
+      status.textContent = `⬆️ Uploading ${file.name}...`;
+      status.style.color = 'var(--text-mid)';
+
+      const form = new FormData();
+      form.append('file', file);
+
+      try {
+        const res = await fetch(`${API}/buckets/${selectedBucket}/objects/${file.name}`, {
+          method: 'PUT',
+          body: form,
+          headers: authHeaders
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        status.textContent = `✅ ${file.name} uploaded!`;
+        status.style.color = 'var(--accent)';
+        showToast(`"${file.name}" uploaded!`, 'success');
+        loadObjects(selectedBucket);
+        loadBuckets();
+        setTimeout(() => { progress.style.display = 'none'; }, 3000);
+      } catch (err) {
+        status.textContent = `❌ Failed: ${err.message}`;
+        status.style.color = 'var(--danger)';
+        showToast(`Upload failed: ${err.message}`, 'error');
+      }
+    }
+
+    function downloadObject(bucket, key) {
+      window.open(`${API}/buckets/${bucket}/objects/${key}`, '_blank');
+      showToast(`Downloading "${key}"...`, 'success');
+    }
+// Check token expiry on load
+function checkTokenExpiry() {
+  const token = localStorage.getItem('pc_token');
+  const loginTime = localStorage.getItem('pc_login_time');
+  
+  if (!token) {
+    window.location.replace('/login.html');
+    return;
+  }
+
+  // Auto logout after 24 hours
+  if (loginTime) {
+    const elapsed = Date.now() - parseInt(loginTime);
+    const hours24 = 24 * 60 * 60 * 1000;
+    if (elapsed > hours24) {
+      localStorage.clear();
+      window.location.replace('/login.html');
+      return;
+    }
+  }
+}
+
+checkTokenExpiry();
+    async function deleteObject(bucket, key) {
+      if (!confirm(`Delete "${key}"?`)) return;
+      try {
+        await fetch(`${API}/buckets/${bucket}/objects/${key}`, { method: 'DELETE', headers: authHeaders });
+        showToast(`"${key}" deleted`, 'success');
+        loadObjects(bucket);
+        loadBuckets();
+      } catch (err) { showToast('Failed to delete', 'error'); }
+    }
+ localStorage.setItem('pc_login_time', Date.now().toString());
+    // ─── QUEUES ───
+    async function loadQueues(btn) {
+      if (btn) { btn.classList.add('spinning'); setTimeout(() => btn.classList.remove('spinning'), 600); }
+      try {
+        const res = await fetch(`${API}/queues`, { headers: authHeaders });
+        const data = await res.json();
+        const queues = data.queues || [];
+        const container = document.getElementById('queueList');
+
+        if (queues.length === 0) {
+          container.innerHTML = `<div class="empty-state"><div class="empty-icon">📨</div><p>No queues yet. Create one!</p></div>`;
+          return;
+        }
+
+        container.innerHTML = queues.map(q => `
+        <div class="bucket-item">
+          <div class="bucket-name">
+            <div class="bucket-icon" style="background:rgba(124,106,247,0.15)">📨</div>
+            <div>
+              <div>${q.name}</div>
+              <div class="bucket-meta">${q.messageCount} available · ${q.inFlightCount} in-flight</div>
+            </div>
+          </div>
+          <div class="bucket-actions">
+            <button class="btn btn-danger btn-sm" onclick="deleteQueue('${q.name}')">Delete</button>
+          </div>
+        </div>
+      `).join('');
+      } catch (err) {
+        document.getElementById('queueList').innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Failed to load queues</p></div>`;
+      }
+    }
+
+    async function createQueue() {
+      const name = document.getElementById('newQueueName').value.trim();
+      if (!name) return;
+      try {
+        const res = await fetch(`${API}/queues/${name}`, { method: 'POST', headers: authHeaders });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        closeModal('createQueue');
+        document.getElementById('newQueueName').value = '';
+        showToast(`Queue "${name}" created!`, 'success');
+        loadQueues();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function deleteQueue(name) {
+      if (!confirm(`Delete queue "${name}"?`)) return;
+      try {
+        await fetch(`${API}/queues/${name}`, { method: 'DELETE', headers: authHeaders });
+        showToast(`Queue "${name}" deleted`, 'success');
+        loadQueues();
+      } catch (err) { showToast('Failed to delete queue', 'error'); }
+    }
+
+    // ─── CRONS ───
+    async function loadCrons(btn) {
+      if (btn) { btn.classList.add('spinning'); setTimeout(() => btn.classList.remove('spinning'), 600); }
+      try {
+        const res = await fetch(`${API}/crons`, { headers: authHeaders });
+        const data = await res.json();
+        const crons = data.crons || [];
+        const container = document.getElementById('cronList');
+
+        if (crons.length === 0) {
+          container.innerHTML = `<div class="empty-state"><div class="empty-icon">⏱️</div><p>No scheduled jobs yet</p></div>`;
+          return;
+        }
+
+        container.innerHTML = crons.map(c => `
+        <div class="bucket-item">
+          <div class="bucket-name">
+            <div class="bucket-icon" style="background:rgba(247,162,106,0.15)">⏱️</div>
+            <div>
+              <div>${c.name}</div>
+              <div class="bucket-meta">${c.schedule} · fn: ${c.functionName} · runs: ${c.runCount}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="badge ${c.enabled ? 'badge-green' : ''}" style="${!c.enabled ? 'background:rgba(107,114,128,0.1);color:var(--text-dim);border:1px solid var(--border)' : ''}">${c.enabled ? 'Active' : 'Paused'}</span>
+            <div class="bucket-actions" style="opacity:1">
+              <button class="btn btn-ghost btn-sm" onclick="toggleCron('${c.name}', ${!c.enabled})">${c.enabled ? 'Pause' : 'Resume'}</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteCron('${c.name}')">Delete</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      } catch (err) {
+        document.getElementById('cronList').innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Failed to load schedules</p></div>`;
+      }
+    }
+
+    async function createCronJob() {
+      const name = document.getElementById('newCronName').value.trim();
+      const schedule = document.getElementById('newCronSchedule').value.trim();
+      const functionName = document.getElementById('newCronFunction').value.trim();
+      if (!name || !schedule || !functionName) return showToast('All fields required', 'error');
+      try {
+        const res = await fetch(`${API}/crons`, {
+          method: 'POST',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, schedule, functionName })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        closeModal('createCron');
+        showToast(`Schedule "${name}" created!`, 'success');
+        loadCrons();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function toggleCron(name, enabled) {
+      try {
+        await fetch(`${API}/crons/${name}/toggle`, {
+          method: 'PATCH',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled })
+        });
+        showToast(`Schedule "${name}" ${enabled ? 'resumed' : 'paused'}`, 'success');
+        loadCrons();
+      } catch (err) { showToast('Failed to toggle', 'error'); }
+    }
+
+    async function deleteCron(name) {
+      if (!confirm(`Delete schedule "${name}"?`)) return;
+      try {
+        await fetch(`${API}/crons/${name}`, { method: 'DELETE', headers: authHeaders });
+        showToast(`Schedule "${name}" deleted`, 'success');
+        loadCrons();
+      } catch (err) { showToast('Failed to delete', 'error'); }
+    }
+
+    function showSection(name) {
+      ['storage', 'vpc', 'ec2', 'queues', 'functions', 'crons', 'gateway', 'sns', 'secrets', 'cloudwatch', 'rds','ai', 'billing', 'logs', 'iam', 'about'].forEach(s => {
+        const sec = document.getElementById('section-' + s);
+        if (sec) sec.style.display = s === name ? 'block' : 'none';
+      });
+
+      document.querySelectorAll('.sidebar-item').forEach(el => {
+        el.classList.remove('active');
+      });
+
+      const active = document.querySelector(`[onclick="showSection('${name}')"]`);
+      if (active) active.classList.add('active');
+
+      if (name === 'vpc') loadVpcs();
+      if (name === 'ec2') {
+        loadEc2Instances();
+        loadVpcsForDropdown();
+      }
+      if (name === 'iam') { showIamTab('users'); }
+      if (name === 'logs') loadLogs();
+      if (name === 'ai') { checkOllamaStatus(); loadAiHistory(); }
+      if (name === 'queues') loadQueues();
+      if (name === 'crons') loadCrons();
+      if (name === 'iam') loadUsers();
+      if (name === 'gateway') loadGatewayRoutes();
+      if (name === 'sns') loadTopics();
+      if (name === 'secrets') loadSecrets();
+      if (name === 'cloudwatch') loadMetrics();
+      if (name === 'billing') loadBilling();
+      if (name === 'rds') loadRdsInstances();
+
+    }
+
+
+    // ─── LOGS ───
+    async function loadLogs() {
+      try {
+        const res = await fetch(`${API}/logs`, { headers: authHeaders });
+        const data = await res.json();
+        const logs = data.logs || [];
+        const container = document.getElementById('logList');
+
+        if (logs.length === 0) {
+          container.innerHTML = `<div class="empty-state"><div class="empty-icon">📊</div><p>No activity yet. Upload a file!</p></div>`;
+          return;
+        }
+
+        container.innerHTML = logs.map(log => {
+          const type = log.type?.toLowerCase() || 'put';
+          const dotClass = type === 'trigger' ? 'trigger' : type === 'delete' ? 'delete' : 'put';
+          const time = new Date(log.timestamp).toLocaleTimeString();
+          return `
+          <div class="log-item">
+            <div class="log-dot ${dotClass}"></div>
+            <div class="log-message">${log.message}</div>
+            <div class="log-time">${time}</div>
+          </div>
+        `;
+        }).join('');
+      } catch {
+        document.getElementById('logList').innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Could not load logs</p></div>`;
+      }
+    }
+
+    async function loadUsers(btn) {
+  if (btn) { btn.classList.add('spinning'); setTimeout(() => btn.classList.remove('spinning'), 600); }
+  try {
+    const res = await fetch(`${API}/auth/users`, { headers: authHeaders });
+    const data = await res.json();
+    const users = data.users || [];
+
+    // Load roles for dropdown
+    const rolesRes = await fetch(`${API}/iam/roles`, { headers: authHeaders });
+    const rolesData = await rolesRes.json();
+    const roles = rolesData.roles || [];
+
+    const roleColors = {
+      'admin': '#ff5c5c',
+      'vm-contributor': '#f7a26a',
+      'vm-reader': '#00d4aa',
+      'developer': '#7c6af7',
+      'readonly': '#6b7280'
+    };
+
+    const container = document.getElementById('userList');
+    if (users.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">👤</div><p>No users</p></div>';
+      return;
+    }
+
+    container.innerHTML = users.map(u => `
+      <div class="user-item">
+        <div class="user-info">
+          <div class="user-avatar" style="background:linear-gradient(135deg,${roleColors[u.assignedRole||u.role]||'#7c6af7'},#00d4aa)">
+            ${u.username[0].toUpperCase()}
+          </div>
+          <div>
+            <div style="font-size:13px;display:flex;align-items:center;gap:8px">
+              ${u.username}
+              <span class="badge" style="background:rgba(255,255,255,0.1);color:${roleColors[u.assignedRole||u.role]||'var(--accent)'}">
+                ${u.assignedRole || u.role || 'no role'}
+              </span>
+            </div>
+            <div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">
+              ${(u.permissions||[]).slice(0,5).map(p=>`<span class="perm-tag">${p}</span>`).join('')}
+              ${(u.permissions||[]).length > 5 ? `<span class="perm-tag">+${u.permissions.length-5} more</span>` : ''}
+            </div>
+            <div class="bucket-meta" style="margin-top:4px">
+              Last login: ${u.lastLogin ? new Date(u.lastLogin).toLocaleString() : 'Never'}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select onchange="assignUserRole('${u.username}', this.value)"
+            style="width:140px;font-size:11px;padding:5px 8px">
+            <option value="">Assign Role...</option>
+            ${roles.map(r => `
+              <option value="${r.id}" ${(u.assignedRole||u.role)===r.id?'selected':''}>
+                ${r.name}
+              </option>
+            `).join('')}
+          </select>
+          <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.username}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    document.getElementById('userList').innerHTML = '<div class="empty-state"><p style="color:var(--danger)">Failed</p></div>';
+  }
+}
+
+async function assignUserRole(username, roleId) {
+  if (!roleId) return;
+  try {
+    const res = await fetch(`${API}/auth/users/${username}/role`, {
+      method: 'PATCH',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roleId })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    showToast(`Role assigned to ${username}!`);
+    loadUsers();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+    async function createUser() {
+      const username = document.getElementById('newUsername').value.trim();
+      const password = document.getElementById('newUserPassword').value.trim();
+      const permsRaw = document.getElementById('newUserPerms').value.trim();
+      const permissions = permsRaw ? permsRaw.split(',').map(p => p.trim()) : [];
+
+      if (!username || !password) return showToast('Username and password required', 'error');
+      try {
+        const res = await fetch(`${API}/auth/signup`, {
+          method: 'POST',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, permissions })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        closeModal('createUser');
+        showToast(`User "${username}" created!`, 'success');
+        loadUsers();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function deleteUser(username) {
+      if (!confirm(`Delete user "${username}"?`)) return;
+      try {
+        await fetch(`${API}/auth/users/${username}`, { method: 'DELETE', headers: authHeaders });
+        showToast(`User "${username}" deleted`, 'success');
+        loadUsers();
+      } catch (err) { showToast('Failed to delete user', 'error'); }
+    }
+
+    // ─── MODAL ───
+    function openModal(name) {
+      if (name === 'createRole') {
+        openCreateRoleModal();
+        return; // openCreateRoleModal opens the modal itself via _openModalEl
+      }
+      _openModalEl(name);
+    }
+    function _openModalEl(name) {
+      const el = document.getElementById('modal-' + name);
+      if (el) el.classList.add('open');
+    }
+    function closeModal(name) {
+      document.getElementById(`modal-${name}`).classList.remove('open');
+    }
+
+
+    // ─── TOAST ───
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> ${message}`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    // ─── DRAG AND DROP ───
+    const zone = document.getElementById('uploadZone');
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('dragover');
+      if (!selectedBucket) { showToast('Select a bucket first!', 'error'); return; }
+      Array.from(e.dataTransfer.files).forEach(uploadFile);
+    });
+    // ─── GATEWAY ───
+    let selectedApiId = null;
+    let selectedApiStage = null;
+
+    function showGatewayTab(tab) {
+      document.getElementById('gw-tab-proxy').style.display = tab === 'proxy' ? 'block' : 'none';
+      document.getElementById('gw-tab-restapi').style.display = tab === 'restapi' ? 'block' : 'none';
+      if (tab === 'restapi') loadRestApis();
+      if (tab === 'proxy') loadGatewayRoutes();
+    }
+
+    function toggleIntegrationUri() {
+      const type = document.getElementById('newIntegrationType').value;
+      document.getElementById('integrationUriGroup').style.display = type === 'MOCK' ? 'none' : 'block';
+    }
+
+    // ── Proxy routes ──
+    async function loadGatewayRoutes(btn) {
+      if (btn) { btn.classList.add('spinning'); setTimeout(() => btn.classList.remove('spinning'), 600); }
+      try {
+        const res = await fetch(`${API}/gateway/routes`, { headers: authHeaders });
+        const data = await res.json();
+        const routes = data.routes || [];
+        const container = document.getElementById('gatewayList');
+        if (routes.length === 0) {
+          container.innerHTML = `<div class="empty-state"><div class="empty-icon">🌐</div><p>No routes yet. Create one!</p></div>`;
+          return;
+        }
+        container.innerHTML = routes.map(r => `
+      <div class="bucket-item">
+        <div class="bucket-name">
+          <div class="bucket-icon" style="background:rgba(0,212,170,0.1)">🌐</div>
+          <div>
+            <div>${r.path} → ${r.target}</div>
+            <div class="bucket-meta">ID: ${r.id} · Method: ${r.method} · Hits: ${r.hits}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="badge ${r.enabled ? 'badge-green' : ''}">${r.enabled ? 'Active' : 'Off'}</span>
+          <div class="bucket-actions" style="opacity:1">
+            <button class="btn btn-ghost btn-sm" onclick="toggleGatewayRoute('${r.id}', ${!r.enabled})">${r.enabled ? 'Disable' : 'Enable'}</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteGatewayRoute('${r.id}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+      } catch {
+        document.getElementById('gatewayList').innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Failed to load routes</p></div>`;
+      }
+    }
+
+    async function createGatewayRoute() {
+      const id = document.getElementById('newRouteId').value.trim();
+      const path = document.getElementById('newRoutePath').value.trim();
+      const target = document.getElementById('newRouteTarget').value.trim();
+      const method = document.getElementById('newRouteMethod').value.trim() || 'ANY';
+      if (!id || !path || !target) return showToast('ID, path and target required', 'error');
+      try {
+        const res = await fetch(`${API}/gateway/routes`, {
+          method: 'POST',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, path, target, method })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        closeModal('createRoute');
+        showToast(`Route "${id}" created!`, 'success');
+        loadGatewayRoutes();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function toggleGatewayRoute(id, enabled) {
+      try {
+        await fetch(`${API}/gateway/routes/${id}/toggle`, {
+          method: 'PATCH',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled })
+        });
+        showToast(`Route ${enabled ? 'enabled' : 'disabled'}`, 'success');
+        loadGatewayRoutes();
+      } catch { showToast('Failed to toggle', 'error'); }
+    }
+
+    async function deleteGatewayRoute(id) {
+      if (!confirm(`Delete route "${id}"?`)) return;
+      try {
+        await fetch(`${API}/gateway/routes/${id}`, { method: 'DELETE', headers: authHeaders });
+        showToast(`Route "${id}" deleted`, 'success');
+        loadGatewayRoutes();
+      } catch { showToast('Failed to delete', 'error'); }
+    }
+
+    // ── REST APIs ──
+    async function loadRestApis(btn) {
+      if (btn) { btn.classList.add('spinning'); setTimeout(() => btn.classList.remove('spinning'), 600); }
+      try {
+        const res = await fetch(`${API}/gateway/restapis`, { headers: authHeaders });
+        const text = await res.text();
+        let data; try { data = JSON.parse(text); } catch { throw new Error('Invalid response from server'); }
+        const apis = data.items || [];
+        const container = document.getElementById('restApiList');
+        if (apis.length === 0) {
+          container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔌</div><p>No REST APIs yet</p></div>`;
+          return;
+        }
+        container.innerHTML = apis.map(a => `
+      <div class="bucket-item ${selectedApiId === a.id ? 'selected' : ''}" onclick="selectApi('${a.id}', '${a.name}')">
+        <div class="bucket-name">
+          <div class="bucket-icon" style="background:rgba(124,106,247,0.15)">🔌</div>
+          <div>
+            <div>${a.name}</div>
+            <div class="bucket-meta">ID: ${a.id} · ${new Date(a.createdDate).toLocaleDateString()}</div>
+          </div>
+        </div>
+        <div class="bucket-actions">
+          <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteRestApi('${a.id}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+      } catch {
+        document.getElementById('restApiList').innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Failed to load</p></div>`;
+      }
+    }
+
+    async function createRestApi() {
+      const name = document.getElementById('newApiName').value.trim();
+      const description = document.getElementById('newApiDesc').value.trim();
+      if (!name) return showToast('Name required', 'error');
+      try {
+        const res = await fetch(`${API}/gateway/restapis`, {
+          method: 'POST',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, description })
+        });
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); } catch { throw new Error(`Server error (${res.status}): ${text.slice(0, 120)}`); }
+        if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+        closeModal('createRestApi');
+        document.getElementById('newApiName').value = '';
+        document.getElementById('newApiDesc').value = '';
+        showToast(`API "${name}" created!`, 'success');
+        loadRestApis();
+        selectApi(data.id, data.name);
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function deleteRestApi(apiId) {
+      if (!confirm('Delete this API and all its resources?')) return;
+      try {
+        await fetch(`${API}/gateway/restapis/${apiId}`, { method: 'DELETE', headers: authHeaders });
+        showToast('API deleted', 'success');
+        if (selectedApiId === apiId) {
+          selectedApiId = null;
+          document.getElementById('restApiDetail').innerHTML = `<div class="empty-state"><div class="empty-icon">👈</div><p>Select an API</p></div>`;
+          document.getElementById('resourcePanel').style.display = 'none';
+          document.getElementById('testPanel').style.display = 'none';
+        }
+        loadRestApis();
+      } catch { showToast('Failed to delete', 'error'); }
+    }
+
+    async function selectApi(apiId, apiName) {
+      selectedApiId = apiId;
+      document.getElementById('selectedApiLabel').textContent = apiName;
+      document.getElementById('resourcePanel').style.display = 'block';
+
+      // Load stages
+      const stagesRes = await fetch(`${API}/gateway/restapis/${apiId}/stages`, { headers: authHeaders });
+      const stagesData = await stagesRes.json();
+      const stages = stagesData.items || [];
+      selectedApiStage = stages[0]?.stageName || null;
+
+      document.getElementById('restApiDetail').innerHTML = `
+    <div style="margin-bottom:16px">
+      <div class="form-label">Invoke URL</div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px;font-size:11px;color:var(--accent)">
+        ${selectedApiStage
+          ? `${window.location.origin}/gateway/execute/${apiId}/${selectedApiStage}/{path}`
+          : '<span style="color:var(--text-dim)">Not deployed yet</span>'}
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div class="form-label">Stages</div>
+      ${stages.length === 0
+          ? `<div style="font-size:11px;color:var(--text-dim)">No stages — deploy first</div>`
+          : stages.map(s => `<span class="badge badge-green" style="margin-right:4px">${s.stageName}</span>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary btn-sm" onclick="openDeployModal()">🚀 Deploy</button>
+      ${selectedApiStage ? `<button class="btn btn-ghost btn-sm" onclick="document.getElementById('testPanel').style.display='block'">⚡ Test</button>` : ''}
+    </div>
+  `;
+
+      loadResources();
+      loadRestApis();
+    }
+
+    function openDeployModal() {
+      document.getElementById('newStageName').value = 'dev';
+      openModal('deploy');
+    }
+
+    async function deployApi() {
+      const stageName = document.getElementById('newStageName').value.trim();
+      if (!stageName) return showToast('Stage name required', 'error');
+      try {
+        const res = await fetch(`${API}/gateway/restapis/${selectedApiId}/deployments`, {
+          method: 'POST',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ stageName })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        closeModal('deploy');
+        showToast(`Deployed to stage "${stageName}"!`, 'success');
+        selectApi(selectedApiId, document.getElementById('selectedApiLabel').textContent);
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // ── Resources ──
+    async function loadResources() {
+      if (!selectedApiId) return;
+      try {
+        const res = await fetch(`${API}/gateway/restapis/${selectedApiId}/resources`, { headers: authHeaders });
+        const data = await res.json();
+        const resources = (data.items || []).filter(r => r.path !== '/');
+        const container = document.getElementById('resourceList');
+
+        if (resources.length === 0) {
+          container.innerHTML = `<div class="empty-state"><div class="empty-icon">🗂️</div><p>No resources yet. Add one!</p></div>`;
+          return;
+        }
+
+        container.innerHTML = resources.map(r => `
+      <div class="bucket-item" style="cursor:default">
+        <div class="bucket-name">
+          <div class="bucket-icon" style="background:rgba(247,162,106,0.1)">📁</div>
+          <div>
+            <div style="color:var(--accent3)">${r.path}</div>
+            <div class="bucket-meta">ID: ${r.id}</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="openAddMethodModal('${r.id}')">+ Method</button>
+      </div>
+    `).join('');
+      } catch { showToast('Failed to load resources', 'error'); }
+    }
+
+    async function createResource() {
+      const parentId = document.getElementById('newResourceParent').value;
+      const pathPart = document.getElementById('newResourcePath').value.trim();
+      if (!pathPart) return showToast('Path part required', 'error');
+      try {
+        const res = await fetch(`${API}/gateway/restapis/${selectedApiId}/resources/${parentId}`, {
+          method: 'POST',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pathPart })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        closeModal('createResource');
+        document.getElementById('newResourcePath').value = '';
+        showToast(`Resource "/${pathPart}" added!`, 'success');
+        loadResources();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function openAddMethodModal(resourceId) {
+      document.getElementById('methodResourceId').value = resourceId;
+      document.getElementById('integrationUriGroup').style.display = 'none';
+      openModal('addMethod');
+    }
+
+    async function addMethod() {
+      const resourceId = document.getElementById('methodResourceId').value;
+      const httpMethod = document.getElementById('newMethodHttp').value;
+      const authorizationType = document.getElementById('newMethodAuth').value;
+      const integrationType = document.getElementById('newIntegrationType').value;
+      const uri = document.getElementById('newIntegrationUri').value.trim();
+
+      try {
+        // Add method
+        let res = await fetch(`${API}/gateway/restapis/${selectedApiId}/resources/${resourceId}/methods/${httpMethod}`, {
+          method: 'PUT',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ authorizationType })
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+
+        // Add integration
+        res = await fetch(`${API}/gateway/restapis/${selectedApiId}/resources/${resourceId}/methods/${httpMethod}/integration`, {
+          method: 'PUT',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: integrationType, uri, httpMethod: 'POST' })
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+
+        closeModal('addMethod');
+        showToast(`${httpMethod} method added!`, 'success');
+        loadResources();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // Open create resource modal — populate parent dropdown
+    async function openCreateResourceModal() {
+      if (!selectedApiId) return showToast('Select an API first', 'error');
+      const res = await fetch(`${API}/gateway/restapis/${selectedApiId}/resources`, { headers: authHeaders });
+      const data = await res.json();
+      const resources = data.items || [];
+      document.getElementById('newResourceParent').innerHTML = resources.map(r =>
+        `<option value="${r.id}">${r.path}</option>`
+      ).join('');
+      document.getElementById('modal-createResource').classList.add('open');
+    }
+
+
+
+    // ── Test endpoint ──
+    async function testEndpoint() {
+      if (!selectedApiId || !selectedApiStage) return showToast('Deploy the API first', 'error');
+      const method = document.getElementById('testMethod').value;
+      const path = document.getElementById('testPath').value.trim() || '/';
+      const bodyRaw = document.getElementById('testBody').value.trim();
+
+      const options = {
+        method,
+        headers: { ...authHeaders, 'Content-Type': 'application/json' }
+      };
+      if (bodyRaw && method !== 'GET') {
+        try { options.body = JSON.stringify(JSON.parse(bodyRaw)); } catch { options.body = bodyRaw; }
+      }
+
+      try {
+        const url = `${API}/gateway/execute/${selectedApiId}/${selectedApiStage}${path}`;
+        const res = await fetch(url, options);
+        const text = await res.text();
+        let pretty;
+        try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch { pretty = text; }
+        document.getElementById('testResult').style.display = 'block';
+        document.getElementById('testResultBody').textContent = `HTTP ${res.status}\n\n${pretty}`;
+        document.getElementById('testResultBody').style.color = res.ok ? 'var(--accent)' : 'var(--danger)';
+      } catch (err) {
+        document.getElementById('testResult').style.display = 'block';
+        document.getElementById('testResultBody').textContent = `Error: ${err.message}`;
+        document.getElementById('testResultBody').style.color = 'var(--danger)';
+      }
+    }
+    // ─── SNS ───
+    async function loadTopics(btn) {
+      if (btn) { btn.classList.add('spinning'); setTimeout(() => btn.classList.remove('spinning'), 600); }
+      try {
+        const res = await fetch(`${API}/sns/topics`, { headers: authHeaders });
+        const data = await res.json();
+        const topics = data.topics || [];
+        const container = document.getElementById('topicList');
+        if (topics.length === 0) { container.innerHTML = '<div class="empty-state"><div class="empty-icon">📨</div><p>No topics yet</p></div>'; return; }
+        container.innerHTML = topics.map(t => `
+      <div class="bucket-item">
+        <div class="bucket-name">
+          <div class="bucket-icon" style="background:rgba(124,106,247,0.15)">📨</div>
+          <div>
+            <div>${t.name}</div>
+            <div class="bucket-meta">${t.subscriptionCount} subscribers · ${t.messageCount} messages</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="openSubscribeModal('${t.name}')">+ Subscribe</button>
+          <button class="btn btn-primary btn-sm" onclick="openPublishModal('${t.name}')">Publish</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTopic('${t.name}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+      } catch { document.getElementById('topicList').innerHTML = '<div class="empty-state"><p style="color:var(--danger)">Failed</p></div>'; }
+    }
+
+    async function createTopic() {
+      const name = document.getElementById('newTopicName').value.trim();
+      if (!name) return;
+      try {
+        const res = await fetch(`${API}/sns/topics`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        closeModal('createTopic');
+        document.getElementById('newTopicName').value = '';
+        showToast(`Topic "${name}" created!`);
+        loadTopics();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function deleteTopic(name) {
+      if (!confirm(`Delete topic "${name}"?`)) return;
+      try { await fetch(`${API}/sns/topics/${name}`, { method: 'DELETE', headers: authHeaders }); showToast('Topic deleted'); loadTopics(); }
+      catch { showToast('Failed', 'error'); }
+    }
+
+    function openSubscribeModal(topicName) {
+      document.getElementById('subscribeTopicName').value = topicName;
+      openModal('subscribe');
+    }
+
+    async function subscribeTopic() {
+      const topicName = document.getElementById('subscribeTopicName').value;
+      const protocol = document.getElementById('subProtocol').value;
+      const endpoint = document.getElementById('subEndpoint').value.trim();
+      if (!endpoint) return showToast('Endpoint required', 'error');
+      try {
+        const res = await fetch(`${API}/sns/topics/${topicName}/subscribe`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ protocol, endpoint }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        closeModal('subscribe');
+        showToast('Subscribed!');
+        loadTopics();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    function openPublishModal(topicName) {
+      document.getElementById('publishTopicName').value = topicName;
+      openModal('publish');
+    }
+
+    async function publishMessage() {
+      const topicName = document.getElementById('publishTopicName').value;
+      const message = document.getElementById('publishMessage').value.trim();
+      const subject = document.getElementById('publishSubject').value.trim();
+      if (!message) return showToast('Message required', 'error');
+      try {
+        const res = await fetch(`${API}/sns/topics/${topicName}/publish`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ message, subject }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        closeModal('publish');
+        showToast(`Published to ${data.result.subscribersNotified} subscribers!`);
+        loadTopics();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // ─── SECRETS ───
+    async function loadSecrets(btn) {
+      if (btn) { btn.classList.add('spinning'); setTimeout(() => btn.classList.remove('spinning'), 600); }
+      try {
+        const res = await fetch(`${API}/secrets`, { headers: authHeaders });
+        const data = await res.json();
+        const secrets = data.secrets || [];
+        const container = document.getElementById('secretList');
+        if (secrets.length === 0) { container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔑</div><p>No secrets yet</p></div>'; return; }
+        container.innerHTML = secrets.map(s => `
+      <div class="bucket-item">
+        <div class="bucket-name">
+          <div class="bucket-icon" style="background:rgba(247,162,106,0.1)">🔑</div>
+          <div>
+            <div>${s.name}</div>
+            <div class="bucket-meta">${s.description || 'No description'} · v${s.version} · Updated: ${new Date(s.updatedAt).toLocaleString()}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="revealSecret('${s.name}')">👁 Reveal</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteSecret('${s.name}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+      } catch { document.getElementById('secretList').innerHTML = '<div class="empty-state"><p style="color:var(--danger)">Failed</p></div>'; }
+    }
+
+    async function createSecret() {
+      const name = document.getElementById('newSecretName').value.trim();
+      const value = document.getElementById('newSecretValue').value.trim();
+      const description = document.getElementById('newSecretDesc').value.trim();
+      if (!name || !value) return showToast('Name and value required', 'error');
+      try {
+        const res = await fetch(`${API}/secrets`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ name, value, description }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        closeModal('createSecret');
+        showToast(`Secret "${name}" stored securely!`);
+        loadSecrets();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function revealSecret(name) {
+      try {
+        const res = await fetch(`${API}/secrets/${name}`, { headers: authHeaders });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        alert(`🔑 ${name}\n\nValue: ${data.secret.value}\nVersion: ${data.secret.version}`);
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function deleteSecret(name) {
+      if (!confirm(`Delete secret "${name}"?`)) return;
+      try { await fetch(`${API}/secrets/${name}`, { method: 'DELETE', headers: authHeaders }); showToast('Secret deleted'); loadSecrets(); }
+      catch { showToast('Failed', 'error'); }
+    }
+
+    // ─── CLOUDWATCH ───
+    async function loadMetrics() {
+      try {
+        const res = await fetch(`${API}/metrics`, { headers: authHeaders });
+        const data = await res.json();
+        document.getElementById('cwTotalRequests').textContent = data.counters.totalRequests;
+        document.getElementById('cwTotalErrors').textContent = data.counters.totalErrors;
+        document.getElementById('cwAvgResponse').textContent = data.avgResponseTime + 'ms';
+        document.getElementById('cwErrorRate').textContent = data.errorRate + '%';
+        document.getElementById('cwRPM').textContent = data.requestsPerMinute;
+
+        // Requests by service
+        const serviceContainer = document.getElementById('cwByService');
+        const services = data.requestsByService;
+        const max = Math.max(...Object.values(services), 1);
+        serviceContainer.innerHTML = Object.entries(services).map(([name, count]) => `
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px">
+          <span>${name}</span><span style="color:var(--accent)">${count}</span>
+        </div>
+        <div style="background:var(--surface2);border-radius:4px;height:6px;overflow:hidden">
+          <div style="background:var(--accent);height:100%;width:${(count / max * 100)}%;transition:width 0.5s;border-radius:4px"></div>
+        </div>
+      </div>
+    `).join('');
+
+        // Timeline
+        const timeline = document.getElementById('cwTimeline');
+        const recent = data.recentTimeline || [];
+        if (recent.length === 0) { timeline.innerHTML = '<div class="empty-state"><p>No requests yet</p></div>'; return; }
+        timeline.innerHTML = recent.map(r => `
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px">
+        <span style="color:var(--text-dim)">${r.time}</span>
+        <span style="color:${r.status >= 400 ? 'var(--danger)' : 'var(--accent)'}">HTTP ${r.status}</span>
+        <span style="color:var(--text-mid)">${r.responseTime}ms</span>
+      </div>
+    `).join('');
+      } catch { showToast('Failed to load metrics', 'error'); }
+    }
+
+    // ─── RDS ───
+    let selectedRdsId = null;
+
+    async function loadRdsInstances(btn) {
+      if (btn) { btn.classList.add('spinning'); setTimeout(() => btn.classList.remove('spinning'), 600); }
+      try {
+        const res = await fetch(`${API}/rds/instances`, { headers: authHeaders });
+        const data = await res.json();
+        const instances = data.instances || [];
+        const container = document.getElementById('rdsList');
+        if (instances.length === 0) { container.innerHTML = '<div class="empty-state"><div class="empty-icon">🗄️</div><p>No instances yet</p></div>'; return; }
+        container.innerHTML = instances.map(i => `
+      <div class="bucket-item ${selectedRdsId === i.id ? 'selected' : ''}" onclick="selectRds('${i.id}','${i.dbName}')">
+        <div class="bucket-name">
+          <div class="bucket-icon" style="background:rgba(0,212,170,0.1)">🗄️</div>
+          <div>
+            <div>${i.dbName}</div>
+            <div class="bucket-meta">ID: ${i.id} · Port: ${i.port} · ${i.endpoint}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="badge ${i.status === 'available' ? 'badge-green' : ''}" style="${i.status !== 'available' ? 'background:rgba(247,162,106,0.1);color:var(--accent3);border:1px solid rgba(247,162,106,0.2)' : ''}">${i.status}</span>
+          <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteRdsInstance('${i.id}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+      } catch { document.getElementById('rdsList').innerHTML = '<div class="empty-state"><p style="color:var(--danger)">Failed</p></div>'; }
+    }
+
+    function selectRds(id, dbName) {
+      selectedRdsId = id;
+      document.getElementById('selectedRdsLabel').textContent = dbName;
+      loadRdsInstances();
+    }
+
+    async function createRdsInstance() {
+      const dbName = document.getElementById('newRdsDb').value.trim();
+      const username = document.getElementById('newRdsUser').value.trim();
+      const password = document.getElementById('newRdsPass').value.trim();
+      if (!dbName || !username || !password) return showToast('All fields required', 'error');
+      try {
+        await fetch(`${API}/rds/instances`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ dbName, username, password }) });
+        closeModal('createRds');
+        showToast('RDS instance creating... (~30 seconds)');
+        setTimeout(() => loadRdsInstances(), 5000);
+      } catch { showToast('Failed', 'error'); }
+    }
+
+    async function executeQuery() {
+      if (!selectedRdsId) return showToast('Select an instance first!', 'error');
+      const sql = document.getElementById('sqlQuery').value.trim();
+      if (!sql) return showToast('Enter a SQL query', 'error');
+      try {
+        const res = await fetch(`${API}/rds/instances/${selectedRdsId}/query`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ sql }) });
+        const data = await res.json();
+        document.getElementById('queryResult').style.display = 'block';
+        if (!res.ok) { document.getElementById('queryResultBody').style.color = 'var(--danger)'; document.getElementById('queryResultBody').textContent = data.error; return; }
+        document.getElementById('queryResultBody').style.color = 'var(--accent)';
+        document.getElementById('queryResultBody').textContent = JSON.stringify(data.result, null, 2);
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function deleteRdsInstance(id) {
+      if (!confirm('Delete this RDS instance? This will destroy all data!')) return;
+      try { await fetch(`${API}/rds/instances/${id}`, { method: 'DELETE', headers: authHeaders }); showToast('Instance deleted'); if (selectedRdsId === id) selectedRdsId = null; loadRdsInstances(); }
+      catch { showToast('Failed', 'error'); }
+    }
+    // ─── INIT ───
+    checkStatus();
+    loadBuckets();
+    setInterval(checkStatus, 10000);
+  </script>
+</body>
+
+</html>
