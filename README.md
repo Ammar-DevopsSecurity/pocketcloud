@@ -410,6 +410,23 @@ MIT — free to use for learning, portfolios, or local development.
 
 <div align="center">
 
+## 👤 About Me
+
+<div align="center">
+
+**Ammar** | DevOps & Cloud Security Engineer
+
+I'm passionate about building secure, scalable infrastructure on AWS and automating everything that can be automated. This project is part of my portfolio of hands-on cloud engineering work.
+
+[![GitHub](https://img.shields.io/badge/GitHub-Ammar--DevopsSecurity-181717?style=for-the-badge&logo=github)](https://github.com/Ammar-DevopsSecurity)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Ammar%20DevOps%20Security-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ammar-devopssecurity-82510340a)
+
+</div>
+
+---
+
+<div align="center">
+
 Built with ☁️ by **Ammar-DevopsSecurity**
 
 ⭐ **Star this repo if you found it useful!**
