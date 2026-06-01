@@ -4,6 +4,8 @@
 
 ### A fully-featured local AWS simulator built from scratch
 
+🚀 Built 14 AWS-inspired cloud services from scratch using Node.js, Docker, PostgreSQL, IAM/RBAC, Event-Driven Architecture, and Local AI.
+
 ![PocketCloud Dashboard](https://img.shields.io/badge/Status-Active-00d4aa?style=for-the-badge)
 ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs)
 ![Docker](https://img.shields.io/badge/Docker-Required-2496ED?style=for-the-badge&logo=docker)
@@ -17,6 +19,23 @@
 
 ---
 
+# 🎥 Live Demo
+
+<div align="center">
+
+<a href="https://youtu.be/TbbnS-Kt-oY">
+  <img src="pocketcloud/Pocket Cloud Thumbnail.png"
+       alt="PocketCloud Demo"
+       width="1000">
+</a>
+
+### ▶️ Click the image above to watch the full demo
+
+See PocketCloud in action: S3, Lambda, EC2, RDS, IAM/RBAC, AI Functions, Docker-powered infrastructure, CloudWatch, Billing Simulator, and more.
+
+</div>
+
+---
 ## 🤔 What is PocketCloud?
 
 PocketCloud is a **local cloud infrastructure simulator** that replicates core AWS services on your own machine. Built entirely from scratch to demonstrate deep understanding of cloud architecture, distributed systems, Docker, event-driven design, and enterprise security (RBAC/IAM).
@@ -409,6 +428,16 @@ MIT — free to use for learning, portfolios, or local development.
 ---
 
 <div align="center">
+
+## 🌟 Why This Project Stands Out
+
+PocketCloud isn't a UI mockup or tutorial clone.
+
+It is a working cloud platform that simulates core AWS services using real containers, networking, event processing, authentication, authorization, and infrastructure orchestration.
+
+The project was built to deeply understand how cloud providers operate internally rather than simply consuming cloud services.
+
+Every service, permission check, container lifecycle, event trigger, scheduler, and billing calculation was implemented from scratch.
 
 ## 👤 About Me
 
