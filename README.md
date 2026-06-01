@@ -24,10 +24,10 @@
 <div align="center">
 
 <a href="https://youtu.be/TbbnS-Kt-oY">
-  <img src="pocketcloud/Pocket Cloud Thumbnail.png"
-       alt="PocketCloud Demo"
-       width="1000">
+  <img src="./pocketcloud-thumbnail.png" alt="PocketCloud Demo" width="900">
 </a>
+
+</div>
 
 ### ▶️ Click the image above to watch the full demo
 
